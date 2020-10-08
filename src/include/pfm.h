@@ -45,6 +45,7 @@ namespace PeterDB {
         unsigned getNumberOfPages();                                        // Get the number of pages in the file
         RC collectCounterValues(unsigned &readPageCount, unsigned &writePageCount,
                                 unsigned &appendPageCount);                 // Put current counter values into variables
+        bool isFileExisted();
     };
 
 } // namespace PeterDB
