@@ -2,7 +2,7 @@
 #define _pfm_h_
 
 #define PAGE_SIZE 4096
-
+#define INT_FIELD_LEN 4
 #include <string>
 
 namespace PeterDB {
@@ -27,6 +27,7 @@ namespace PeterDB {
         PagedFileManager(const PagedFileManager &);                         // Prevent construction by copying
         PagedFileManager &operator=(const PagedFileManager &);              // Prevent assignment
 
+        bool isFileExisting(const std::string &fileName) const;
     };
 
     class FileHandle {
@@ -35,6 +36,7 @@ namespace PeterDB {
         unsigned readPageCounter;
         unsigned writePageCounter;
         unsigned appendPageCounter;
+        FILE *file;
 
         FileHandle();                                                       // Default constructor
         ~FileHandle();                                                      // Destructor
@@ -45,7 +47,6 @@ namespace PeterDB {
         unsigned getNumberOfPages();                                        // Get the number of pages in the file
         RC collectCounterValues(unsigned &readPageCount, unsigned &writePageCount,
                                 unsigned &appendPageCount);                 // Put current counter values into variables
-        bool isFileExisted();
     };
 
 } // namespace PeterDB

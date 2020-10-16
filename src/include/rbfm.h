@@ -4,7 +4,9 @@
 #include <vector>
 
 #include "pfm.h"
+using namespace std;
 
+#define SLOT_TABLE_FIELD_LEN 4
 namespace PeterDB {
     // Record ID
     typedef struct {
@@ -69,7 +71,7 @@ namespace PeterDB {
     class RecordBasedFileManager {
     public:
         static RecordBasedFileManager &instance();                          // Access to the singleton instance
-
+        PagedFileManager &pfm = PagedFileManager::instance();
         RC createFile(const std::string &fileName);                         // Create a new record-based file
 
         RC destroyFile(const std::string &fileName);                        // Destroy a record-based file
@@ -139,6 +141,59 @@ namespace PeterDB {
         RecordBasedFileManager(const RecordBasedFileManager &);                     // Prevent construction by copying
         RecordBasedFileManager &operator=(const RecordBasedFileManager &);          // Prevent assignment
 
+        int
+        encodeRecordData_returnSlotLength(const std::vector<Attribute> &recordDescriptor, const void *data,
+                                          void *encodedData);
+
+        RC insertEncodedRecord(FileHandle &fileHandle, RID &rid, const void *encodedData, int slotLength);
+
+        int getSlotTableLength(void *pageData);
+
+        int getFreeSpc(char *pageData, int slotTableLen);
+
+        void
+        getOffsetAndLengthUsingSlotNum(const int slotNum, const void *pageData, int slotTableLen, int &offset,
+                                       int &length) const;
+
+        void getRealDirectedPageNumAndSlotNum(int offset, int length, RID &directedRid) const;
+
+        int decodeData(const vector <Attribute> &recordDescriptor, void *data, const void *encodedData);
+
+        void formDataPageAfterDelete_SlotTableNotUpdated(void *pageData, int slotTableLen, int offset, int length,
+                                                         const void *newPageData);
+
+        void updateOffsetsInSlotTable(const void *pageData, int slotTableLen, int moveLength, int offset,
+                                      bool isDelete) const;
+
+        void updateSlotTable_SetOffsetAndLengthBySlotNum(void *pageData, int slotTableLen, int slotNum, int offset,
+                                                         int length) const;
+
+        int updateOffsetUsingSlotNumber(const void *pageData, int slotTableLen, int tempOffset, int slotNum) const;
+
+        int updateLengthUsingSlotNumber(void *pageData, int slotTableLen, int length, int slotNum) const;
+
+        int
+        getNullIndicatorStr(const std::vector<Attribute> &recordDescriptor, const void *data,
+                            unsigned char *&nullIndicatorStr) const;
+
+        void
+        insertRecordInDirectedPageAndSetDirSlot(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
+                                                const void *data, const RID &rid, char *newPageData);
+
+        void directed_setSlotForOldPage(FileHandle &fileHandle, const RID &rid, char *newPageData, RID newDirectedRid);
+
+        void
+        computeTheDirectedOffsetAndLengthInTheOldPage(const RID &directedRid, int &newOffset, int &newLength) const;
+
+        RC setLenToNegLenInDirectedPage(FileHandle &fileHandle, const RID &directedPageRid);
+
+        void
+        formDataPageAfterUpdate_SlotTableNotUpdated(char *newPageData, const char *pageData, const void *data,
+                                                    int slotTableLen,
+                                                    int offset, int length, int newSlotLength, int &freeSpc) const;
+
+        bool isAttrFound(const std::string &filterAttributeName, int i_recordDescriptorCounter,
+                         const std::vector<Attribute> &recordDescriptor) const;
     };
 
 } // namespace PeterDB
