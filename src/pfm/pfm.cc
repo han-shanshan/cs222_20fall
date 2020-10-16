@@ -20,7 +20,8 @@ namespace PeterDB {
         if(isFileExisting(fileName)){return 1;} //file already exists
         FILE *f = fopen(fileName.c_str(), "w");
         if (!f) {return 2;} //Fail to create a new file.
-//        fclose(f);
+        fflush(f);
+        fclose(f);
         return 0;
     }
 
