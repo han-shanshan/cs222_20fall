@@ -27,7 +27,7 @@ namespace PeterDB {
         PagedFileManager(const PagedFileManager &);                         // Prevent construction by copying
         PagedFileManager &operator=(const PagedFileManager &);              // Prevent assignment
 
-        bool isFileExisting(const std::string &fileName) const;
+        RC isFileExisting(const std::string &fileName) const;
     };
 
     class FileHandle {
