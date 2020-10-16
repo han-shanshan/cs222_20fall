@@ -1,8 +1,8 @@
 #include "src/include/pfm.h"
-#include <cstdio>
+#include <stdio.h>
 
-#include <memory>
-#include "cmath"
+//#include <memory>
+//#include "cmath"
 
 using namespace std;
 namespace PeterDB {
