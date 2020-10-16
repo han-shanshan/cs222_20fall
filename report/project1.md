@@ -64,6 +64,10 @@ slot directory: "$$ |offset  length | offset  length | offset  length | offset  
 
 ### 4. Page Management
 - Show your algorithm of finding next available-space page when inserting a record.
+Traverse each page. If the free space in the current page > length of the record, the record is inserted into this page. Then go to the
+ slot directory. If there is an empty slot, the slot info will be stored at the empty slot; otherwise, the directory
+ will be appended a new slot.
+
 
 
 
