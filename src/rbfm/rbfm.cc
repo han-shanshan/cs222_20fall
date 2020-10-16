@@ -345,30 +345,6 @@ namespace PeterDB {
 //        update the slot information in the new page (not new directed page)
             memcpy(newPageData, oldPageData, PAGE_SIZE);
             updateSlotTable_SetOffsetAndLengthBySlotNum(newPageData, slotTableLen, rid.slotNum, 0, 0);
-//        update the directed page
-////////////////////////////////////
-//        void *directedPageData = malloc(PAGE_SIZE);
-//        void *newDirectedPageData = malloc(PAGE_SIZE);
-//        fileHandle.readPage(directedPageNum, directedPageData);
-//        int directedSlotTableLen = getSlotTableLength(directedPageData);
-//        //  get the offset and the length of the deleted slot; slot num in the directed page: length
-//        int directedOffset = 0, directedLength = 0;
-//        getOffsetAndLengthUsingSlotNum(directedSlotNum, directedPageData,
-//                                       directedSlotTableLen, directedOffset, directedLength);
-//        //in directed page: offset >= 0, length < 0: the record is an updated record from other page
-//        directedLength = -directedLength;
-//        cout<<"-----------------page id = "<<directedPageNum<<"--"<<endl;
-//        formDataPageAfterDelete_SlotTableNotUpdated(directedPageData, directedSlotTableLen,
-//                                                    directedOffset, directedLength, newDirectedPageData);
-//  update the slot table:
-            //      in the new page, set the deleted record's <offset, length> to <0,0>;
-//        updateSlotTable_SetOffsetAndLengthBySlotNum(newDirectedPageData, directedSlotTableLen, directedSlotNum, 0, 0);
-//        fileHandle.writePage(directedPageNum, newDirectedPageData);
-//        free(newDirectedPageData);
-//        free(directedPageData);
-
-////////////////////////////////////
-
         }
         fileHandle.writePage(rid.pageNum, newPageData);
         free(oldPageData);
