@@ -1,5 +1,7 @@
+#include <iostream>
 #include "src/include/pfm.h"
-
+#include <stdio.h>
+using namespace std;
 namespace PeterDB {
     PagedFileManager &PagedFileManager::instance() {
         static PagedFileManager _pf_manager = PagedFileManager();
@@ -49,16 +51,18 @@ namespace PeterDB {
 
     RC PagedFileManager::closeFile(FileHandle &fileHandle) {
         if (!fileHandle.file) {return -1; }      //Unused fileHandle
-        fileHandle.writePageCounter++;
-        //r-w-a
-        fseek(fileHandle.file, 0, SEEK_SET);
-        fwrite(&fileHandle.readPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
-        fseek(fileHandle.file, INT_FIELD_LEN, SEEK_SET);
-        fwrite(&fileHandle.writePageCounter, INT_FIELD_LEN, 1, fileHandle.file);
-        fseek(fileHandle.file, 2 * INT_FIELD_LEN, SEEK_SET);
-        fwrite(&fileHandle.appendPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
+        if(fileHandle.appendPageCounter != 0 || fileHandle.writePageCounter != 0 || fileHandle.appendPageCounter != 0) {
+            //r-w-a
+            fileHandle.writePageCounter++;
+            fseek(fileHandle.file, 0, SEEK_SET);
+            fwrite(&fileHandle.readPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
+            fseek(fileHandle.file, INT_FIELD_LEN, SEEK_SET);
+            fwrite(&fileHandle.writePageCounter, INT_FIELD_LEN, 1, fileHandle.file);
+            fseek(fileHandle.file, 2 * INT_FIELD_LEN, SEEK_SET);
+            fwrite(&fileHandle.appendPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
+            fflush(fileHandle.file);
+        }
         fclose(fileHandle.file);
-
         return 0;
     }
 
@@ -89,6 +93,7 @@ namespace PeterDB {
         fseek(file, startPosition, SEEK_SET); //move the pointer to the required page
         fwrite(data, 1, PAGE_SIZE, file);
         this->writePageCounter++;
+        fflush(this->file);
         return 0;
     }
 
@@ -106,7 +111,8 @@ namespace PeterDB {
         fseek(this->file, 0, SEEK_END);
         if (fwrite(data, 1, PAGE_SIZE, this->file) == 0) {return -1; } //fail to append;
         this->appendPageCounter++;
-        fflush(this->file);
+        fflush(file);
+//        fsync(fileno(file));
         return 0;
     }
 
@@ -116,6 +122,7 @@ namespace PeterDB {
         fseek(file, 0, SEEK_END);
         int numOfPages = 0;
         if ((ftell(file) / PAGE_SIZE) - 1 > 0) {numOfPages = ftell(file) / PAGE_SIZE - 1;}
+//        cout<<"---------------#of pgs= " <<numOfPages<<endl;
         return numOfPages;
     }
 

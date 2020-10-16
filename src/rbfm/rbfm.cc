@@ -151,11 +151,8 @@ namespace PeterDB {
  */
     void RecordBasedFileManager::getOffsetAndLengthUsingSlotNum(const int slotNum, const void *pageData, int slotTableLen,
                                                                 int &offset, int &length) const {
-        memcpy(&offset, (char *) pageData + PAGE_SIZE - slotTableLen + 2 * SLOT_TABLE_FIELD_LEN * slotNum,
-               SLOT_TABLE_FIELD_LEN); //offset
-        memcpy(&length,
-               (char *) pageData + PAGE_SIZE - slotTableLen + 2 * SLOT_TABLE_FIELD_LEN * slotNum + SLOT_TABLE_FIELD_LEN,
-               SLOT_TABLE_FIELD_LEN);  //length
+        memcpy(&offset, (char *) pageData + PAGE_SIZE - slotTableLen + 2 * SLOT_TABLE_FIELD_LEN * slotNum, SLOT_TABLE_FIELD_LEN); //offset
+        memcpy(&length, (char *) pageData + PAGE_SIZE - slotTableLen + 2 * SLOT_TABLE_FIELD_LEN * slotNum + SLOT_TABLE_FIELD_LEN, SLOT_TABLE_FIELD_LEN);  //length
     }
 
     /**
@@ -180,10 +177,8 @@ namespace PeterDB {
 
     int RecordBasedFileManager::getFreeSpc(char *pageData, int slotTableLen) {
         int freeSpc = -1;
-        if(slotTableLen == 0) {
-            freeSpc = PAGE_SIZE - 2 - sizeof(int); //
-        }else
-            memcpy(&freeSpc, pageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), sizeof(int));
+        if(slotTableLen == 0) {freeSpc = PAGE_SIZE - 2 - sizeof(int);}
+        else {memcpy(&freeSpc, pageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), sizeof(int));}
         return freeSpc;
     }
 
@@ -236,10 +231,7 @@ namespace PeterDB {
         void *encodedData;
         void *directedPageData;
         getOffsetAndLengthUsingSlotNum(rid.slotNum, pageData, slotTableLen, offset, length);
-        if (offset >= 0 && length < 0) {
-            length = -length;
-        }
-
+        if (offset >= 0 && length < 0) {length = -length; }
         if (offset >= 0 && length > 0) { //record in this page
             encodedData = malloc(PAGE_SIZE);
             memcpy(encodedData, (char *) pageData + offset, length);
@@ -309,9 +301,7 @@ namespace PeterDB {
                 encodedDataOffset += fieldLen;
             }
         }
-
         memcpy((char *) data, nullFieldsIndicator, nullFieldsIndicatorActualSize);
-
         free(nullFieldsIndicator);
     }
 
@@ -321,10 +311,7 @@ namespace PeterDB {
         void *oldPageData = malloc(PAGE_SIZE);
         fileHandle.readPage(rid.pageNum, oldPageData);
         int slotTableLen = getSlotTableLength(oldPageData);
-        if (slotTableLen <= 0) {
-//        cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
-            return -1;
-        }
+        if (slotTableLen <= 0) {return -1; }//cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
         int offset = 0, length = 0;
 //  get the offset and the length of the deleted slot
         getOffsetAndLengthUsingSlotNum(rid.slotNum, oldPageData, slotTableLen, offset, length);
@@ -333,14 +320,8 @@ namespace PeterDB {
 //      length: -slot id - 1. //avoid slot id = 0
 //      old page: offset < 0, length < 0: direct to other page
 //      directed page: offset >= 0, length < 0: the record is an updated record from other page, so no need to count for this page
-        if (offset >= 0 && length < 0) {
-            length = -length;
-////        cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
-        }
-        if (offset == 0 && length == 0) {
-//        cout << "Fail to delete: the record has already been deleted" << endl;
-            return -1;
-        }
+        if (offset >= 0 && length < 0) {length = -length; }  //cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
+        if (offset == 0 && length == 0) {return -1; }  //cout << "Fail to delete: the record has already been deleted" << endl;
         void *newPageData = malloc(PAGE_SIZE);
 //  delete the record
         if (offset >= 0 && length > 0) {//record in the current page
@@ -351,7 +332,6 @@ namespace PeterDB {
             //      1. set the deleted record's <offset, length> to <0,0>;
             //      2. update the offsets of the latter records
             //小的不变  大于offset的减length
-
             updateOffsetsInSlotTable(newPageData, slotTableLen, 0 - length, offset, true);
         } else if (offset < 0 && length < 0) { //data in other page
 //      directed: slot info in slot table:
@@ -422,12 +402,8 @@ namespace PeterDB {
     3. After delete, offset == 0, moveLength ==0
     4. 别的page存过来的: offset >=0, moveLength < 0
  */
-            if (tempOffset < 0 && tempLength < 0) { //directed to other page, no influence on the current page
-                continue;
-            }
-            if (tempOffset == 0 && tempLength == 0) {//after delete
-                continue;
-            }
+            if (tempOffset < 0 && tempLength < 0) {continue; } //directed to other page, no influence on the current page
+            if (tempOffset == 0 && tempLength == 0) {continue; } //after delete
             int moveLen4Update = 0;
             //下面两种情况包含分类中的1, 2
             if (tempOffset > offset) {
@@ -464,8 +440,7 @@ namespace PeterDB {
 
     int RecordBasedFileManager::updateOffsetUsingSlotNumber(const void *pageData, int slotTableLen, int tempOffset,
                                                             int slotNum) const {
-        memcpy((char *) pageData + PAGE_SIZE - slotTableLen + 2 * SLOT_TABLE_FIELD_LEN * slotNum, &tempOffset,
-               SLOT_TABLE_FIELD_LEN); //offset
+        memcpy((char *) pageData + PAGE_SIZE - slotTableLen + 2 * SLOT_TABLE_FIELD_LEN * slotNum, &tempOffset, SLOT_TABLE_FIELD_LEN); //offset
         return 0;
     }
 
@@ -506,7 +481,6 @@ namespace PeterDB {
         int nullIndicatorNum= ceil(1.0 * recordDescriptor.size() / CHAR_BIT);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         nullIndicatorStr = (unsigned char*)malloc(nullIndicatorNum);
-
         memset(nullIndicatorStr, 0, nullIndicatorNum);
         memcpy(nullIndicatorStr, data, nullIndicatorNum);
         return nullIndicatorNum;
@@ -544,9 +518,7 @@ namespace PeterDB {
                     free(strValue);
                 }
             }
-            else{
-                cout <<"    "<< recordDescriptor[i].name << ": NULL";
-            }
+            else{cout <<"    "<< recordDescriptor[i].name << ": NULL"; }
         }
         cout<<endl;
         free(nullIndicatorStr);
@@ -615,8 +587,7 @@ namespace PeterDB {
         if(length < 0) {length = - length; }
         memcpy((char *) newPageData, pageData, offset);
         memcpy((char *) newPageData + offset, data, newSlotLength);
-        memcpy((char *) newPageData + offset + newSlotLength,
-               pageData + offset + length,
+        memcpy((char *) newPageData + offset + newSlotLength, pageData + offset + length,
                PAGE_SIZE - slotTableLen - 2 - sizeof(int) - freeSpc - offset - length);
 //    add free space
         freeSpc = freeSpc - (newSlotLength - length);
@@ -663,10 +634,7 @@ namespace PeterDB {
 
     RC RecordBasedFileManager::setLenToNegLenInDirectedPage(FileHandle &fileHandle, const RID &directedPageRid) {
         void *directedPageData = (char *) malloc(PAGE_SIZE);
-        if(fileHandle.readPage(directedPageRid.pageNum, directedPageData) != 0) {
-            cout<<"Fail to read the directed page."<<endl;
-            return -1;
-        }
+        if(fileHandle.readPage(directedPageRid.pageNum, directedPageData) != 0) {return -1; }//cout<<"Fail to read the directed page."<<endl;
         int slotTableLen2 = getSlotTableLength(directedPageData);
         int directedOffset = 0, directedLength = 0;
         getOffsetAndLengthUsingSlotNum(directedPageRid.slotNum, directedPageData, slotTableLen2,directedOffset, directedLength);
