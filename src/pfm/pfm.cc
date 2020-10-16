@@ -18,14 +18,16 @@ namespace PeterDB {
 
     RC PagedFileManager::createFile(const std::string &fileName) {
         if(isFileExisting(fileName)){return -1;} //file already exists
-        if (fopen(fileName.c_str(), "wb") == NULL) {return -1;} //Fail to create a new file.
+        FILE *f = fopen(fileName.c_str(), "wb");
+        if (f == NULL) {return -2;} //Fail to create a new file.
+        fclose(f);
         return 0;
     }
 
     bool PagedFileManager::isFileExisting(const std::string &fileName) const {
-        FILE *file = fopen(fileName.c_str(), "r");
-        if (file == NULL) {return false; } // file does not exist
-        fclose(file);
+        FILE *f = fopen(fileName.c_str(), "r");
+        if (f == NULL) {return false; } // file does not exist
+        fclose(f);
         return true;
     }
 
