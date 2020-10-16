@@ -17,9 +17,9 @@ namespace PeterDB {
     PagedFileManager &PagedFileManager::operator=(const PagedFileManager &) = default;
 
     RC PagedFileManager::createFile(const std::string &fileName) {
-        if(isFileExisting(fileName)){return -1;} //file already exists
+        if(isFileExisting(fileName)){return 1;} //file already exists
         FILE *f = fopen(fileName.c_str(), "wb");
-        if (!f) {return -2;} //Fail to create a new file.
+        if (!f) {return 2;} //Fail to create a new file.
         fclose(f);
         return 0;
     }
@@ -39,7 +39,7 @@ namespace PeterDB {
     RC PagedFileManager::openFile(const std::string &fileName, FileHandle &fileHandle) {
         if(fileHandle.file) {return -1; } //this fileHandle has already been used;
         //PagedFileManager failed to open the file: this file does not exist.
-        if ((fileHandle.file = fopen(fileName.c_str(), "rb+")) == NULL) {return -1;}
+        if (!(fileHandle.file = fopen(fileName.c_str(), "rb+"))) {return -1;}
         //rwa
         fseek(fileHandle.file, 0, SEEK_SET);
         fread(&fileHandle.readPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
@@ -120,7 +120,7 @@ namespace PeterDB {
 
     unsigned FileHandle::getNumberOfPages() {
         if (!this->file) {return -1;} //File does not exist.
-        if (file == NULL) {return -1;}
+        if (!file) {return -1;}
         fseek(file, 0, SEEK_END);
         int numOfPages = 0;
         if ((ftell(file) / PAGE_SIZE) - 1 > 0) {numOfPages = ftell(file) / PAGE_SIZE - 1;}
