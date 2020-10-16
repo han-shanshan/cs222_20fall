@@ -59,7 +59,7 @@
             counter values of this FileHandle in the three given variables.
 
 - Explain your slot directory design if applicable.
-
+slot directory: "$$ |offset  length | offset  length | offset  length | offset  length ..."
 
 
 ### 4. Page Management
