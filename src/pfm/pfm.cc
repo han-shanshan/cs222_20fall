@@ -1,6 +1,6 @@
-#include <iostream>
 #include "src/include/pfm.h"
 #include <cstdio>
+
 #include <memory>
 #include "cmath"
 
@@ -75,6 +75,7 @@ namespace PeterDB {
         readPageCounter = 0;
         writePageCounter = 0;
         appendPageCounter = 0;
+        this->file = NULL;
     }
 
     FileHandle::~FileHandle() = default;
