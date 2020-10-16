@@ -1,7 +1,9 @@
 #include <iostream>
 #include "src/include/pfm.h"
 #include <cstdio>
-#include <cstring>
+#include "stdio.h"
+
+#include <memory>
 
 using namespace std;
 namespace PeterDB {

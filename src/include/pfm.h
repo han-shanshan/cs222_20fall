@@ -4,6 +4,8 @@
 #define PAGE_SIZE 4096
 #define INT_FIELD_LEN 4
 #include <string>
+#include <climits>
+#include <memory>
 
 namespace PeterDB {
 
