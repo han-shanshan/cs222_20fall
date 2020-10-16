@@ -1,6 +1,6 @@
 #include <iostream>
 #include "src/include/pfm.h"
-#include <stdio.h>
+#include <cstdio>
 using namespace std;
 namespace PeterDB {
     PagedFileManager &PagedFileManager::instance() {
