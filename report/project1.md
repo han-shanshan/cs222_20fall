@@ -2,29 +2,15 @@
 
 
 ### 1. Basic information
- - Team #:
- - Github Repo Link:
- - Student 1 UCI NetID:
- - Student 1 Name:
+ - Team #: 666
+ - Github Repo Link: https://github.com/UCI-Chenli-teaching/cs222-fall20-team-666
+ - Student 1 UCI NetID: 56204511
+ - Student 1 Name: Shanshan Han
 
 
 
 ### 2. Internal Record Format
 - Show your record format design.
-
-
-
-1. Basic information
-Student ID : 56204511
-Student Name : Shanshan Han
-OS (bit) : Mac
-gcc version : 11.0.0
-
-
-
-2. Internal Record Format
-- Show your record format design and describe how your design satisfies O(1) field access. If not, just mention that you haven't implemented this feature.
-- Describe how you store a VarChar field.
 
   1) Record Format
      - In each page, the records are stored one by one. Variable-length records are used, so that the waste of space is reduced as much as possible.
@@ -52,8 +38,8 @@ gcc version : 11.0.0
 
 
 
-3. Page Format
-- Show your page format design
+### 3. Page Format
+- Show your page format design.
 
   1) PagedFileManager class: handle the file creation, deletion, opening, and closing.
       - RC createFile (const string &fileName): create an empty file with a name of fileName.
@@ -72,9 +58,24 @@ gcc version : 11.0.0
       - RC collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount): return the current
             counter values of this FileHandle in the three given variables.
 
+- Explain your slot directory design if applicable.
 
 
-4. Implementation Detail
+
+### 4. Page Management
+- Show your algorithm of finding next available-space page when inserting a record.
+
+
+
+- How many hidden pages are utilized in your design?
+1
+
+
+- Show your hidden page(s) format design if applicable
+readPageCounter(4 bytes) writePageCount(4 bytes) appendPageCount(4 bytes)
+
+
+### 5. Implementation Detail
 - Other implementation details goes here.
 
     1) This system use RecordBasedFileManager to handle record-based operations such as inserting, updating, deleting, and reading records.
@@ -95,51 +96,6 @@ gcc version : 11.0.0
         passes the null information of the record data. The length n is calculated as ceil(number of fields / 8). If the
         value for a field is NULL, the corresponding bit in the null indicator is set to 1. And the record data only
         contains not-null values.
-
-
-
-5. Other (optional)
-- Freely use this section to tell us about things that are related to the project 1, but not related to the other sections (optional)
-
-
-
-
-- Describe how you store a null field.
-
-
-
-- Describe how you store a VarChar field.
-
-
-
-- Describe how your record design satisfies O(1) field access.
-
-
-
-### 3. Page Format
-- Show your page format design.
-
-
-
-- Explain your slot directory design if applicable.
-
-
-
-### 4. Page Management
-- Show your algorithm of finding next available-space page when inserting a record.
-
-
-
-- How many hidden pages are utilized in your design?
-
-
-
-- Show your hidden page(s) format design if applicable
-
-
-
-### 5. Implementation Detail
-- Other implementation details goes here.
 
 
 

@@ -423,7 +423,7 @@ namespace PeterDB {
         }
     }
 
-    /**
+/**
  *
  * @param pageData
  * @param slotTableLen
@@ -498,13 +498,13 @@ namespace PeterDB {
                     int int_attr;
                     memcpy(&int_attr,(char*)data+offset,recordDescriptor[i].length);
                     offset += recordDescriptor[i].length;
-                    std::cout <<"    "<<recordDescriptor[i].name << ": " << int_attr;
+                    out<<recordDescriptor[i].name << ": " << int_attr;
                 }
                 else if(recordDescriptor[i].type == TypeReal){
                     float floatValue = 0;
                     memcpy(&floatValue,(char*)data+offset,recordDescriptor[i].length);
                     offset += recordDescriptor[i].length;
-                    cout <<"    "<< recordDescriptor[i].name << ": " << floatValue;
+                    out << recordDescriptor[i].name << ": " << floatValue;
                 }else { //  TypeVarChar
                     int varcharLen = 0;
                     memcpy(&varcharLen, (char *)data + offset, sizeof(int));
@@ -512,24 +512,25 @@ namespace PeterDB {
                     offset += sizeof(int);
                     memcpy(strValue,(char*)data+offset,varcharLen);
                     offset += varcharLen;
-                    std :: cout <<"    "<<recordDescriptor[i].name << ": " ;//
-//                    printStr(varcharLen, strValue);
+                    out <<"    "<<recordDescriptor[i].name << ": " ;//
+                    printStr(varcharLen, strValue, out);
 //                cout<<endl;
                     free(strValue);
                 }
             }
-            else{cout <<"    "<< recordDescriptor[i].name << ": NULL"; }
+            else{out << recordDescriptor[i].name << ": NULL"; }
+            if(i < recordDescriptor.size() - 1) {out<<", ";}
         }
-        cout<<endl;
+        out<<endl;
         free(nullIndicatorStr);
         return 0;
     }
 
-    //void RecordBasedFileManager::printStr(int varcharLen, const char *strValue) const {
-//    for(int i = 0; i < varcharLen; i++){
-//        cout<<*(char*)(strValue + i);
-//    }
-//}
+    void RecordBasedFileManager::printStr(int varcharLen, const char *strValue, std::ostream &out) const {
+    for(int i = 0; i < varcharLen; i++){
+        out<<*(char*)(strValue + i);
+    }
+}
 
     RC RecordBasedFileManager::updateRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                             const void *data, const RID &rid) {

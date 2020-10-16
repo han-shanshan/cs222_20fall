@@ -194,6 +194,10 @@ namespace PeterDB {
 
         bool isAttrFound(const std::string &filterAttributeName, int i_recordDescriptorCounter,
                          const std::vector<Attribute> &recordDescriptor) const;
+
+//        void printStr(int varcharLen, const char *strValue) const;
+
+        void printStr(int varcharLen, const char *strValue, ostream &out) const;
     };
 
 } // namespace PeterDB
