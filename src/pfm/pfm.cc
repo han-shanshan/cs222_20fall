@@ -1,11 +1,4 @@
 #include "src/include/pfm.h"
-//#include "cstdio"
-//#include <stdio.h>
-#include <math.h>
-#include <cstdio>
-#include <vector>
-//#include <memory>
-//#include "cmath"
 
 using namespace std;
 namespace PeterDB {

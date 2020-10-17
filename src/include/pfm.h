@@ -6,9 +6,10 @@
 #include <string>
 #include <climits>
 #include <memory>
+#include <cmath>
 #include <cstdio>
-#include "cmath"
-
+#include <vector>
+#include <cstdlib>
 
 namespace PeterDB {
 
