@@ -1,7 +1,6 @@
 #ifndef _rbfm_h_
 #define _rbfm_h_
 
-#include <vector>
 #include <math.h>
 
 #include "pfm.h"

@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <vector>
 #include <cstdlib>
+#include <cstring>
 
 namespace PeterDB {
 
