@@ -1,6 +1,8 @@
 #include "src/include/pfm.h"
 //#include "cstdio"
 #include <stdio.h>
+#include <math.h>
+#include <vector>
 //#include <memory>
 //#include "cmath"
 
