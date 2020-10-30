@@ -46,7 +46,7 @@ namespace PeterDB {
         fread(&fileHandle.writePageCounter, INT_FIELD_LEN, 1, fileHandle.file);
         fseek(fileHandle.file, 2 * INT_FIELD_LEN, SEEK_SET);
         fread(&fileHandle.appendPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
-
+        fileHandle.readPageCounter++;
         return 0;
     }
 

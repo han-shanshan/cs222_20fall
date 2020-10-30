@@ -139,7 +139,7 @@ namespace PeterDBTesting {
 
             ASSERT_EQ(rbfm.insertRecord(fileHandle, recordDescriptor, inBuffer, rid), success)
                                         << "Inserting a inBuffer should succeed.";
-
+//            cout<< "----rid: "<<rid.pageNum<<"-"<<rid.slotNum<<"; ----"<<endl;
             // Leave rid and sizes for next test to examine
             rids.push_back(rid);
             sizes.push_back(size);
@@ -159,12 +159,17 @@ namespace PeterDBTesting {
             if (i % 1000 == 0) {
                 std::ostringstream stream;
                 rbfm.printRecord(recordDescriptor, outBuffer, stream);
-                GTEST_LOG_(INFO) << "Returned Data: " << stream.str();
+                GTEST_LOG_(INFO) << "Returned Data: " << stream.str()<<endl;
             }
 
             int size = 0;
             prepareLargeRecord(recordDescriptor.size(), nullsIndicator, i, inBuffer, &size);
-            ASSERT_EQ(memcmp(outBuffer, inBuffer, sizes[i]), 0) << "the read data should match the inserted data";
+            std::ostringstream stream2;
+            cout<<"inbuffer: "<<endl;
+            rbfm.printRecord(recordDescriptor, inBuffer, stream2);
+            ASSERT_EQ(memcmp(outBuffer, inBuffer, sizes[i]), 0) << "the read data should match the inserted data: "
+
+            <<sizes[i]<<"-- rid: "<<rids[i].pageNum<<"-"<<rids[i].slotNum;
         }
 
     }
