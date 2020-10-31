@@ -318,8 +318,8 @@ namespace PeterDB {
             //      2. update the offsets of the latter records
             //小的不变  大于offset的减length
             //steps: 1. add the former records; 2. add the latter records; 3. add the slot table; 4. update the slot table
-//            formDataPageAfterUpdateOrDelete(newPageData, oldPageData, NULL, slotTableLen, offset, length, 0);
-            formDataPageAfterDelete(oldPageData, slotTableLen, offset, length, newPageData);
+            formDataPageAfterUpdateOrDelete(newPageData, oldPageData, NULL, slotTableLen, offset, length, 0);
+//            formDataPageAfterDelete(oldPageData, slotTableLen, offset, length, newPageData);
             updateOffsetsInSlotTable(newPageData, slotTableLen, 0 - length, offset, true);
         } else if (offset < 0 && length < 0) { //data in other page
 //      directed: slot info in slot table:
@@ -579,7 +579,7 @@ namespace PeterDB {
         memcpy((char *) newPageData + offset + newSlotLength, (char*)pageData + offset + length, latterRecords);
 //    add free space
         freeSpc += (length - newSlotLength);
-        memcpy((char*)newPageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), &freeSpc, sizeof(int));
+        updateFreeSpc(newPageData, freeSpc);
     }
 
     void RecordBasedFileManager::formDataPageAfterUpdate(char *newPageData, const char *pageData,
