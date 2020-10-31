@@ -164,9 +164,9 @@ namespace PeterDBTesting {
 
             int size = 0;
             prepareLargeRecord(recordDescriptor.size(), nullsIndicator, i, inBuffer, &size);
-            std::ostringstream stream2;
-            cout<<"inbuffer: "<<endl;
-            rbfm.printRecord(recordDescriptor, inBuffer, stream2);
+//            std::ostringstream stream2;
+////            cout<<"inbuffer: "<<endl;
+//            rbfm.printRecord(recordDescriptor, inBuffer, stream2);
             ASSERT_EQ(memcmp(outBuffer, inBuffer, sizes[i]), 0) << "the read data should match the inserted data: "
 
             <<sizes[i]<<"-- rid: "<<rids[i].pageNum<<"-"<<rids[i].slotNum;
