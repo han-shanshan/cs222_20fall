@@ -35,6 +35,10 @@ namespace PeterDB {
         return 0;
     }
 
+    RC RecordBasedFileManager::isFileExisting(const string &fileName) {
+        return pfm.isFileExisting(fileName);
+    }
+
     RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
         if (pfm.closeFile(fileHandle) != 0) {return -1; } //fail to close the file.
         return 0;
@@ -399,6 +403,8 @@ namespace PeterDB {
         return 0;
     }
 
+
+
     /**
  * to get the new page data after delete
  * @param pageData -- original data
@@ -716,11 +722,9 @@ namespace PeterDB {
             rid.slotNum = 0;
             rid.pageNum = 0;
             isIteratorNew = false;
-            memset(pageData, 0, PAGE_SIZE);
             if(iteratorHandle.readPage(rid.pageNum, pageData) != 0){
                 return -1;
             }
-            memset(this->pageData, 0, PAGE_SIZE);
             if(getTheCurrentData(rid, this->pageData, rbfm) == 0) {
                 memcpy(data, this->pageData, 200);
                 return 0;
@@ -729,7 +733,6 @@ namespace PeterDB {
 
         while ((rid.pageNum < iteratorHandle.getNumberOfPages())) {
 //        cout<<"iteratorHandle.getNumberOfPages = "<<iteratorHandle.getNumberOfPages();
-            memset(pageData, 0, PAGE_SIZE);
             readPage_res = iteratorHandle.readPage(rid.pageNum, pageData);
             if (readPage_res != 0) { break; }
             int slotCounter = rbfm.getSlotTableLength(pageData) / (2 * SLOT_TABLE_FIELD_LEN);
@@ -756,7 +759,6 @@ namespace PeterDB {
 
     int
     RBFM_ScanIterator::getTheCurrentData(RID rid, void *data, RecordBasedFileManager &rbfm) {
-        memset(notFilteredData, 0, PAGE_SIZE);
         if(rid.pageNum >= iteratorHandle.getNumberOfPages()){
             return -1;
         }
@@ -765,7 +767,6 @@ namespace PeterDB {
         }
 
         //判断是否满足filter条件，如果不满足，则set read_res to -1
-        memset(encodedNotFilteredData, 0, PAGE_SIZE);
         rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
 //    rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
 
@@ -776,7 +777,6 @@ namespace PeterDB {
             int fieldLen = 0;
             int encodedNotFilteredDataOffset = 0;
             int encodedDataOffset = 0;
-            memset(encodedFilteredData, 0, PAGE_SIZE);
             for (int i = 0; i < recordDescriptor.size(); i++) {
                 memcpy(&fieldLen, (char *) encodedNotFilteredData + encodedNotFilteredDataOffset, sizeof(int));
                 encodedNotFilteredDataOffset += sizeof(int);
