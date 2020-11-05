@@ -3,6 +3,8 @@
 //#include "cmath"
 #include <math.h>
 #include <vector>
+#include <sstream>
+
 using namespace std;
 namespace PeterDB {
     RecordBasedFileManager &RecordBasedFileManager::instance() {
@@ -41,12 +43,11 @@ namespace PeterDB {
     RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                             const void *data, RID &rid) {
         //rid: page num, slot num;
-        void *encodedData = malloc(PAGE_SIZE);
+        char encodedData[PAGE_SIZE];
         int slotLength = encodeRecordData_returnSlotLength(recordDescriptor, data, encodedData);
         if (fileHandle.file == NULL) {return -1; } //error;
 //    cout<<"slotlength = "<<slotLength<<endl;
         int res = insertEncodedRecord(fileHandle, rid, encodedData, slotLength);
-        free(encodedData);
         if(res != 0 ){return -1;}
         return 0;
     }
@@ -57,13 +58,13 @@ namespace PeterDB {
         if(positiveSlotLength == 0) {return 0; }
         size_t numOfPages = fileHandle.getNumberOfPages();
         bool isPageFound = false;
-        char *pageData;
+        char pageData[PAGE_SIZE];
         void *slotTable;
         char *oldSlotTable;
         int offset4NewRecord = 0, slotTableLen = 0;
         int freeSpc = -1;
         for (int i = 0; i < numOfPages; i++) {
-            pageData = (char *) malloc(PAGE_SIZE);
+//            pageData = (char *) malloc(PAGE_SIZE);
             fileHandle.readPage(i, pageData);
             int slotTableLen = getSlotTableLength(pageData);
 //          end of a page: slottable + slottable len + freeSpace; new page - end: slottable + slottable len + freeSpc
@@ -110,13 +111,13 @@ namespace PeterDB {
                     memcpy((char *) pageData + PAGE_SIZE - INT_FIELD_LEN , &freeSpc, sizeof(int));
                     memcpy((char *) pageData + PAGE_SIZE - 2 * INT_FIELD_LEN , &slotTableLen, sizeof(int));
                     fileHandle.writePage(i, pageData);
-                    free(pageData);
+//                    free(pageData);
                     free(slotTable);
                     break;
                 }
 //                free(slotTable);////////////////////
             }
-            free(pageData);
+//            free(pageData);
         }
 
         if (!isPageFound) { //new Page
@@ -124,7 +125,7 @@ namespace PeterDB {
             rid.pageNum = numOfPages;
             rid.slotNum = 0;
             freeSpc = PAGE_SIZE - (2 * SLOT_TABLE_FIELD_LEN) - 2 * sizeof(int) - positiveSlotLength;
-            pageData = (char *) malloc(PAGE_SIZE);
+//            memset(pageData, 0, PAGE_SIZE);
             memcpy((void *) pageData, encodedData, positiveSlotLength);
             slotTable = malloc(2 * SLOT_TABLE_FIELD_LEN);
             slotTableLen = 2 * SLOT_TABLE_FIELD_LEN;
@@ -134,7 +135,7 @@ namespace PeterDB {
             memcpy((char *)pageData + PAGE_SIZE - (SLOT_TABLE_FIELD_LEN), &freeSpc, sizeof(int));
             memcpy((char *)pageData + PAGE_SIZE - (2 * SLOT_TABLE_FIELD_LEN), &slotTableLen, sizeof(int));
             fileHandle.appendPage(pageData);
-            free(pageData);
+//            free(pageData);
             free(slotTable);
         }
         return 0;
@@ -172,12 +173,6 @@ namespace PeterDB {
     int RecordBasedFileManager::getFreeSpc(void *pageData) {return getLastInteger(pageData, -1); }
     int RecordBasedFileManager::getSlotTableLength(void *pageData) { return getLastInteger(pageData, -2); }
 
-    int RecordBasedFileManager::getFreeSpc(char *pageData, int slotTableLen) {
-        int freeSpc = -1;
-        if(slotTableLen == 0) {freeSpc = PAGE_SIZE - 2 - sizeof(int);}
-        else {memcpy(&freeSpc, pageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), sizeof(int));}
-        return freeSpc;
-    }
 
     int RecordBasedFileManager::encodeRecordData_returnSlotLength(const std::vector<Attribute> &recordDescriptor,
                                                                   const void *data, void *encodedData) {
@@ -218,19 +213,16 @@ namespace PeterDB {
 
     RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                           const RID &rid, void *data) {
-        void *pageData = malloc(PAGE_SIZE);
+        char pageData[PAGE_SIZE];
         fileHandle.readPage(rid.pageNum, pageData);
         int slotTableLen = getSlotTableLength(pageData);
         int offset = 0, length = 0;
-        void *encodedData;
-        void *directedPageData;
+        char encodedData[PAGE_SIZE];
         getOffsetAndLengthUsingSlotNum(rid.slotNum, pageData, slotTableLen, offset, length);
         if (offset >= 0 && length < 0) {length = -length; }
         if (offset >= 0 && length > 0) { //record in this page
-            encodedData = malloc(PAGE_SIZE);
             memcpy(encodedData, (char *) pageData + offset, length);
         } else if (offset == 0 && length == 0) {
-            free(pageData);
 //        cout << "Fail to read the record: the record has been deleted." << endl;
             return -1;
         }
@@ -242,7 +234,7 @@ namespace PeterDB {
             RID directedRid;
             getRealDirectedPageNumAndSlotNum(offset, length, directedRid);
             int directedOffset = 0, directedLength = 0;
-            directedPageData = malloc(PAGE_SIZE);
+            char directedPageData[PAGE_SIZE];
             fileHandle.readPage(directedRid.pageNum, directedPageData);
 //        cout<<"page data: "<<endl;
 //        printStr(PAGE_SIZE, (char*)directedPageData);
@@ -253,13 +245,9 @@ namespace PeterDB {
             if (directedLength < 0) {//actually it is definitely < 0
                 directedLength = -directedLength;
             }
-            encodedData = malloc(PAGE_SIZE);
             memcpy(encodedData, (char *) directedPageData + directedOffset, directedLength);
-            free(directedPageData);
         }
-        free(pageData);
         decodeData(recordDescriptor, data, encodedData);
-        free(encodedData);
 
         return 0;
     }
@@ -297,7 +285,7 @@ namespace PeterDB {
 
 
     RC RecordBasedFileManager::deleteRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor, const RID &rid) {
-        void *oldPageData = malloc(PAGE_SIZE);
+        char oldPageData[PAGE_SIZE];
         fileHandle.readPage(rid.pageNum, oldPageData);
         int slotTableLen = getSlotTableLength(oldPageData);
         if (slotTableLen <= 0) {return -1; }//cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
@@ -310,7 +298,7 @@ namespace PeterDB {
 //      directed page: offset >= 0, length < 0: the record is an updated record from other page, so no need to count for this page
         if (offset >= 0 && length < 0) {length = -length; }  //cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
         if (offset == 0 && length == 0) {return -1; }  //cout << "Fail to delete: the record has already been deleted" << endl;
-        void *newPageData = malloc(PAGE_SIZE);
+        char newPageData[PAGE_SIZE];
 //      delete the record
         if (offset >= 0 && length > 0) {//record in the current page
             //  update the slot table:
@@ -318,8 +306,8 @@ namespace PeterDB {
             //      2. update the offsets of the latter records
             //小的不变  大于offset的减length
             //steps: 1. add the former records; 2. add the latter records; 3. add the slot table; 4. update the slot table
-            formDataPageAfterUpdateOrDelete(newPageData, oldPageData, NULL, slotTableLen, offset, length, 0);
-//            formDataPageAfterDelete(oldPageData, slotTableLen, offset, length, newPageData);
+//            formDataPageAfterUpdateOrDelete(newPageData, oldPageData, NULL, slotTableLen, offset, length, 0);
+            formDataPageAfterDelete(oldPageData, slotTableLen, offset, length, newPageData);
             updateOffsetsInSlotTable(newPageData, slotTableLen, 0 - length, offset, true);
         } else if (offset < 0 && length < 0) { //data in other page
 //      directed: slot info in slot table:
@@ -335,8 +323,6 @@ namespace PeterDB {
             updateSlotTable_SetOffsetAndLengthBySlotNum(newPageData, slotTableLen, rid.slotNum, 0, 0);
         }
         fileHandle.writePage(rid.pageNum, newPageData);
-        free(oldPageData);
-        free(newPageData);
         return 0;
     }
     /**
@@ -423,7 +409,7 @@ namespace PeterDB {
  * length > 0
  */
     void RecordBasedFileManager::formDataPageAfterDelete(void *pageData, int slotTableLen,
-            int offset, int length, const void *newPageData) {
+                                                         int offset, int length, const void *newPageData) {
         length = abs(length);
         int freeSpc = getFreeSpc((char*)pageData);
         memcpy((char *) newPageData, pageData, offset);
@@ -431,7 +417,7 @@ namespace PeterDB {
         memcpy((char *) newPageData + offset, (char *) pageData + offset + length, latterRecords);
         freeSpc += length;
         addPageTail((char*)newPageData, freeSpc,
-                (char *) pageData + PAGE_SIZE - slotTableLen - 2 * INT_FIELD_LEN, slotTableLen);
+                    (char *) pageData + PAGE_SIZE - slotTableLen - 2 * INT_FIELD_LEN, slotTableLen);
 //        updateFreeSpc((char*)newPageData, freeSpc);
 //        updateSlotTableLen((char*)newPageData, slotTableLen);
         //  add the slot table
@@ -517,8 +503,8 @@ namespace PeterDB {
 
     RC RecordBasedFileManager::updateRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                             const void *data, const RID &rid) {
-        char *pageData = (char *) malloc(PAGE_SIZE);
-        char *newPageData = (char *) malloc(PAGE_SIZE);
+        char pageData[PAGE_SIZE];
+        char newPageData[PAGE_SIZE];
         if(fileHandle.readPage(rid.pageNum, pageData) != 0) { std::cout<<"Fail to read the page."<<std::endl; return -1; }
         int slotTableLen = getSlotTableLength(pageData);
         int offset = 0, length = 0;
@@ -532,14 +518,13 @@ namespace PeterDB {
             }else {directed_setSlotForOldPage(fileHandle, rid, newPageData, directedPageRid); }
         }
         else { //if(offset >= 0 && length < 0 || offset >= 0 && length > 0)
-            void *encodedData = malloc(PAGE_SIZE);
-            void *oldEncodedRecord = malloc(PAGE_SIZE);
-            void *oldRecord = malloc(PAGE_SIZE);
+            char encodedData[PAGE_SIZE];
+            char oldEncodedRecord[PAGE_SIZE];
+            char oldRecord[PAGE_SIZE];
             readRecord(fileHandle, recordDescriptor, rid, oldRecord);
             int newSlotLength = encodeRecordData_returnSlotLength(recordDescriptor, data, encodedData);
             int oldSlotLength = encodeRecordData_returnSlotLength(recordDescriptor, oldRecord, oldEncodedRecord);
             int freeSpc = getFreeSpc(pageData);
-            free(oldEncodedRecord);
 
             if(freeSpc >= newSlotLength - oldSlotLength){ // update on the current page
                 if (newSlotLength != oldSlotLength) { //conditon 1, 2
@@ -552,19 +537,13 @@ namespace PeterDB {
             } else {//update on the directed page
                 deleteRecord(fileHandle, recordDescriptor, rid);
                 if(offset >= 0 && length < 0) {
-                    free(newPageData);
-                    free(oldRecord);
-                    free(pageData);
                     return -6; //在外层更新
                 }else {
                     insertRecordInDirectedPage(fileHandle, recordDescriptor, data, rid, newPageData);
                 }
             }
-            free(oldRecord);
         }
         fileHandle.writePage(rid.pageNum, newPageData);
-        free(newPageData);
-        free(pageData);
         return 0;
     }
 
@@ -579,7 +558,7 @@ namespace PeterDB {
         memcpy((char *) newPageData + offset + newSlotLength, (char*)pageData + offset + length, latterRecords);
 //    add free space
         freeSpc += (length - newSlotLength);
-        updateFreeSpc(newPageData, freeSpc);
+        memcpy((char*)newPageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), &freeSpc, sizeof(int));
     }
 
     void RecordBasedFileManager::formDataPageAfterUpdate(char *newPageData, const char *pageData,
@@ -626,7 +605,7 @@ namespace PeterDB {
 
 
     RC RecordBasedFileManager::setLenToNegLenInDirectedPage(FileHandle &fileHandle, const RID &directedPageRid) {
-        void *directedPageData = (char *) malloc(PAGE_SIZE);
+        char directedPageData[PAGE_SIZE];
         if(fileHandle.readPage(directedPageRid.pageNum, directedPageData) != 0) {return -1; }//cout<<"Fail to read the directed page."<<endl;
         int slotTableLen2 = getSlotTableLength(directedPageData);
         int directedOffset = 0, directedLength = 0;
@@ -634,15 +613,14 @@ namespace PeterDB {
         if(directedLength > 0) {directedLength = - directedLength; }
         updateLengthUsingSlotNumber(directedPageData, slotTableLen2, directedLength, directedPageRid.slotNum);
         fileHandle.writePage(directedPageRid.pageNum, directedPageData);
-        free(directedPageData);
     }
 
 
     RC RecordBasedFileManager::readAttribute(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                              const RID &rid, const std::string &attributeName, void *data) {
-        void *record = malloc(PAGE_SIZE);
+        char record[PAGE_SIZE];
         readRecord(fileHandle, recordDescriptor, rid, record);
-        void *encodedRecord = malloc(PAGE_SIZE);
+        char encodedRecord[PAGE_SIZE];
         encodeRecordData_returnSlotLength(recordDescriptor, record, encodedRecord);
 
         int offset = 0;
@@ -677,8 +655,6 @@ namespace PeterDB {
                 if(fieldLen != -1){ offset += fieldLen; }
             }
         }
-        free(record);
-        free(encodedRecord);
         return 0;
     }
 
@@ -692,7 +668,283 @@ namespace PeterDB {
                                     const std::string &conditionAttribute, const CompOp compOp, const void *value,
                                     const std::vector<std::string> &attributeNames,
                                     RBFM_ScanIterator &rbfm_ScanIterator) {
-        return -1;
+        //    Attribute conditionAttributeAttr;
+        rbfm_ScanIterator.isIteratorNew = true;
+        if(conditionAttribute.length() == 0 ){
+            rbfm_ScanIterator.conditionAttributeAttr.length = -1;
+            rbfm_ScanIterator.conditionAttributeAttr.name = "";
+        }
+        else {
+            for (int j = 0; j < recordDescriptor.size(); j++) {
+                if (strcmp(conditionAttribute.c_str(), recordDescriptor[j].name.c_str()) == 0) {
+                    rbfm_ScanIterator.conditionAttributeAttr = recordDescriptor[j];
+                }
+            }
+        }
+        for (int i = 0; i < recordDescriptor.size(); i++) {
+            if(rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)){
+                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
+            }
+        }
+//    this->openFile(fileHandle.getFileName(), rbfm_ScanIterator.iteratorHandle);
+
+        rbfm_ScanIterator.iteratorHandle = fileHandle;
+        rbfm_ScanIterator.attributeNames = attributeNames;
+        rbfm_ScanIterator.recordDescriptor = recordDescriptor;
+        rbfm_ScanIterator.compOp = compOp;
+        if(compOp != NO_OP){
+            if(rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar){
+                int varcharLen = 0;
+//                cout<<"value:"<<value<<endl;
+                memcpy(&varcharLen, value, sizeof(int));
+                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int) + varcharLen);
+            }else{
+                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int));
+            }
+        }
+
+        return 0;
     }
+
+
+
+    RC RBFM_ScanIterator::getNextRecord(RID &rid, void *data) {
+        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
+        RC readPage_res, read_res = -1;
+        // todo: pagenum slot num = 0?
+        if(isIteratorNew){
+            rid.slotNum = 0;
+            rid.pageNum = 0;
+            isIteratorNew = false;
+            memset(pageData, 0, PAGE_SIZE);
+            if(iteratorHandle.readPage(rid.pageNum, pageData) != 0){
+                return -1;
+            }
+            memset(this->pageData, 0, PAGE_SIZE);
+            if(getTheCurrentData(rid, this->pageData, rbfm) == 0) {
+                memcpy(data, this->pageData, 200);
+                return 0;
+            }
+        }
+
+        while ((rid.pageNum < iteratorHandle.getNumberOfPages())) {
+//        cout<<"iteratorHandle.getNumberOfPages = "<<iteratorHandle.getNumberOfPages();
+            memset(pageData, 0, PAGE_SIZE);
+            readPage_res = iteratorHandle.readPage(rid.pageNum, pageData);
+            if (readPage_res != 0) { break; }
+            int slotCounter = rbfm.getSlotTableLength(pageData) / (2 * SLOT_TABLE_FIELD_LEN);
+//        cout<<", slotcounter = "<<slotCounter<<endl;
+            memset(this->pageData, 0, PAGE_SIZE);
+            while ((rid.slotNum < slotCounter - 1) && (read_res == -1)) {
+                rid.slotNum++;
+//            cout<<"print page data111: "<<endl;
+//            rbfm.printStr(200, (char*)this->pageData);
+                read_res = getTheCurrentData(rid, this->pageData, rbfm);
+            }
+            if (read_res == 0) {
+//            cout<<"print page data: "<<endl;
+//            rbfm.printStr(200, (char*)this->pageData);
+                memcpy(data, this->pageData, 200);
+                break;
+            }
+            rid.pageNum++;
+            rid.slotNum = 0;
+        }
+        return read_res;
+    }
+
+
+    int
+    RBFM_ScanIterator::getTheCurrentData(RID rid, void *data, RecordBasedFileManager &rbfm) {
+        memset(notFilteredData, 0, PAGE_SIZE);
+        if(rid.pageNum >= iteratorHandle.getNumberOfPages()){
+            return -1;
+        }
+        if(rbfm.readRecord(iteratorHandle, recordDescriptor, rid, notFilteredData) != 0) {
+            return -1; //fail to read the record
+        }
+
+        //判断是否满足filter条件，如果不满足，则set read_res to -1
+        memset(encodedNotFilteredData, 0, PAGE_SIZE);
+        rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
+//    rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
+
+        //add filter. 如果没有通过filter则set read_res to -1
+        int read_res = 0;
+        if (!this->getIsRecordSatisfied(rid, rbfm, iteratorHandle)) { read_res = -1; }
+        else{
+            int fieldLen = 0;
+            int encodedNotFilteredDataOffset = 0;
+            int encodedDataOffset = 0;
+            memset(encodedFilteredData, 0, PAGE_SIZE);
+            for (int i = 0; i < recordDescriptor.size(); i++) {
+                memcpy(&fieldLen, (char *) encodedNotFilteredData + encodedNotFilteredDataOffset, sizeof(int));
+                encodedNotFilteredDataOffset += sizeof(int);
+                if (isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
+                    memcpy((char *) encodedFilteredData + encodedDataOffset, &fieldLen, sizeof(int));
+
+                    encodedDataOffset += sizeof(int);
+                    if(fieldLen != -1) { //not null
+                        memcpy((char *) encodedFilteredData + encodedDataOffset,
+                               (char *) encodedNotFilteredData + encodedNotFilteredDataOffset, fieldLen);
+                        encodedDataOffset += fieldLen;
+                        encodedNotFilteredDataOffset += fieldLen;
+                    }
+                } else {
+                    if(fieldLen != -1) {
+                        encodedNotFilteredDataOffset += fieldLen;
+                    }
+                }
+            }
+            std::stringstream stream;
+            rbfm.decodeData(selectedRecordDescriptor, data, encodedFilteredData);
+        }
+        return read_res;
+    }
+
+
+
+    RC RecordBasedFileManager::printEncodedRecord(const std::vector<Attribute> &recordDescriptor, const void *data) {
+        int offset = 0;
+        int tempInt = 0;
+        std::stringstream stream;
+        for(int i=0;i<recordDescriptor.size();i++){
+            memcpy(&tempInt, (char*)data + offset, sizeof(int));
+            offset += sizeof(int);
+            if(tempInt != -1){
+                if(recordDescriptor[i].type == TypeInt){
+                    int int_attr;
+                    memcpy(&int_attr,(char*)data+offset,recordDescriptor[i].length);
+                    offset += recordDescriptor[i].length;
+                    cout <<"    "<<recordDescriptor[i].name << ": " << int_attr;
+                }
+                else if(recordDescriptor[i].type == TypeReal){
+                    float floatValue = 0;
+                    memcpy(&floatValue,(char*)data+offset,recordDescriptor[i].length);
+                    offset += recordDescriptor[i].length;
+                    cout <<"    "<< recordDescriptor[i].name << ": " << floatValue;
+                }else { //  TypeVarChar
+                    char* strValue = (char*) malloc(tempInt);
+                    memcpy(strValue,(char*)data+offset,tempInt);
+                    offset += tempInt;
+                    cout <<"    "<<recordDescriptor[i].name << ": " ;//
+                    printStr(tempInt, strValue, stream);
+                }
+            }
+            else{
+                cout <<"    "<< recordDescriptor[i].name << ": NULL";
+            }
+        }
+        cout<<endl;
+        return 0;
+    }
+
+
+
+    bool RBFM_ScanIterator::getIsRecordSatisfied(const RID rid, RecordBasedFileManager &rbfm,
+                                                 FileHandle handle) const {
+        if(this->conditionAttributeAttr.length == -1 || this->compOp == NO_OP){//no condition , no need to filter
+            return true;
+        }
+        void *attrDataToFilter = malloc(this->conditionAttributeAttr.length + 1);
+        rbfm.readAttribute(handle, this->recordDescriptor,
+                           rid, this->conditionAttributeAttr.name, attrDataToFilter);
+        char * nullFieldsIndicator = (char*)malloc(1);
+        memcpy(nullFieldsIndicator, attrDataToFilter, 1);
+        if(nullFieldsIndicator[0] | (1 << 7) == 1){
+            return false; //null
+        }
+
+        int intFilterValue = 0, int_attrDataToFilter = 0;
+        float floatFilterValue = 0, float_attrDataToFilter = 0;
+        int comRes = 0;
+
+//  compare with filterValue
+        switch (this->conditionAttributeAttr.type) {
+            case TypeInt: {
+                memcpy(&int_attrDataToFilter, (char*)attrDataToFilter + 1, sizeof(int));
+                memcpy(&intFilterValue, this->filterValue, sizeof(int));
+//            cout<<"intFilterValue = "<<intFilterValue<<endl;
+                comRes =  int_attrDataToFilter - intFilterValue;
+                break;
+            }
+            case TypeReal: {
+                memcpy(&float_attrDataToFilter, (char*)attrDataToFilter + 1, sizeof(float));
+                memcpy(&floatFilterValue, this->filterValue, sizeof(float));
+                if (float_attrDataToFilter > floatFilterValue && fabs(float_attrDataToFilter - floatFilterValue) > 1E-6) { comRes = 1; }
+                else if (float_attrDataToFilter < floatFilterValue && fabs(float_attrDataToFilter - floatFilterValue) > 1E-6) { comRes = -1; }
+                else { comRes = 0; }
+                break;
+            }
+            case TypeVarChar: {
+                int filterValue_varcharLen = 0, fieldLen = 0;
+                memcpy(&filterValue_varcharLen, this->filterValue, sizeof(int));
+                memcpy(&fieldLen, (char*)attrDataToFilter + 1, sizeof(int));
+                string dataToFilter((char *)attrDataToFilter + 1 + sizeof(int), fieldLen);
+                string filteVal((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
+                comRes = strcmp(dataToFilter.c_str(), filteVal.c_str());
+                break;
+            }
+        }
+
+        bool isRecordSatisfied = false;
+
+        switch (compOp) {
+            case EQ_OP: { //=
+                if (comRes == 0) { isRecordSatisfied = true; }
+                break;
+            }
+            case GT_OP: { //>
+                if (comRes > 0) { isRecordSatisfied = true; }
+                break;
+            }
+            case LT_OP: { //<
+                if (comRes < 0) { isRecordSatisfied = true; }
+                break;
+            }
+            case LE_OP: { //<=
+                if (comRes <= 0) { isRecordSatisfied = true; }
+                break;
+            }
+            case GE_OP: { //>=
+                if (comRes >= 0) { isRecordSatisfied = true; }
+                break;
+            }
+            case NE_OP: { // !=
+                if (comRes != 0) { isRecordSatisfied = true; }
+                break;
+            }
+            case NO_OP: { //no condition
+                isRecordSatisfied = true;
+                break;
+            }
+        }
+        return isRecordSatisfied;
+    }
+
+
+
+    bool
+    RBFM_ScanIterator::isDescriptorRequired(const vector<std::string> &attributeNames,
+                                            const string &name) const {
+        bool flag = false;
+        for (int j = 0; j < attributeNames.size(); j++) {
+            if (strcmp(attributeNames[j].c_str(), name.c_str()) == 0) {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
+    }
+
+
+    RC RBFM_ScanIterator::close() {
+        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
+        rbfm.closeFile(this->iteratorHandle);
+        vector <Attribute>().swap(selectedRecordDescriptor);
+        vector <Attribute>().swap(recordDescriptor);
+        return 0;
+    }
+
 
 } // namespace PeterDB

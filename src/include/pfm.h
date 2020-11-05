@@ -21,6 +21,8 @@ namespace PeterDB {
 
     class PagedFileManager {
     public:
+        char b[PAGE_SIZE];
+
         static PagedFileManager &instance();                                // Access to the singleton instance
 
         RC createFile(const std::string &fileName);                         // Create a new file
@@ -28,13 +30,14 @@ namespace PeterDB {
         RC openFile(const std::string &fileName, FileHandle &fileHandle);   // Open a file
         RC closeFile(FileHandle &fileHandle);                               // Close a file
 
+        RC isFileExisting(const std::string &fileName) const;
+
     protected:
         PagedFileManager();                                                 // Prevent construction
         ~PagedFileManager();                                                // Prevent unwanted destruction
         PagedFileManager(const PagedFileManager &);                         // Prevent construction by copying
         PagedFileManager &operator=(const PagedFileManager &);              // Prevent assignment
 
-        RC isFileExisting(const std::string &fileName) const;
     };
 
     class FileHandle {

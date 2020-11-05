@@ -8,6 +8,13 @@
 
 namespace PeterDB {
 #define RM_EOF (-1)  // end of a scan operator
+    static const char *const TABLE_CATALOG_FILE_NAME = "catalog-table";
+    static const char *const COLUMN_CATALOG_FILE_NAME = "catalog-column";
+    static const char *const INDEX_CATALOG_FILE_NAME = "catalog-index";
+    static const char *const TABLES_TABLE_NAME = "Tables";
+    static const char *const COLUMNS_TABLE_NAME = "Columns";
+    static const char *const INDEXES_TABLE_NAME = "Indexes";
+//    static const char *const SYSTEM_FILE_NAME = "Systems";
 
     // RM_ScanIterator is an iterator to go through tuples
     class RM_ScanIterator {
@@ -20,12 +27,15 @@ namespace PeterDB {
         RC getNextTuple(RID &rid, void *data);
 
         RC close();
+
+        RBFM_ScanIterator rbfm_scanner;
     };
 
     // Relation Manager
     class RelationManager {
     public:
         static RelationManager &instance();
+        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
 
         RC createCatalog();
 
@@ -71,6 +81,72 @@ namespace PeterDB {
         RelationManager(const RelationManager &);                           // Prevent construction by copying
         RelationManager &operator=(const RelationManager &);                // Prevent assignment
 
+    private:
+        static RelationManager *_relation_manager;
+
+        Attribute attribute(std::string name, AttrType type, int length);
+
+        RC isTableAlreadyExisted(const std::string &tableName) const;
+
+        std::vector<Attribute> getTablesTableDescriptor();
+
+        std::vector<Attribute> getColumnsTableDescriptor();
+
+/*
+    int getMaxIntValueInTheFile(const std::string &fileName, std::vector<Attribute> &recordDescriptor,
+                                const std::string &attributeName, RecordBasedFileManager &rbfm);
+
+    int getMaxColumnPositionInTheFile(const std::string &fileName, std::vector<Attribute> &recordDescriptor,
+                                      const std::string &attributeName, RecordBasedFileManager &rbfm,
+                                      const std::string &filterAttributeName, int filterValue);
+
+    int prepareColumnRecord(std::string &nullFieldsIndicator, std::vector<Attribute> columnDescriptor, Attribute attr,
+                            int tableId, int columnPostion, void *buffer);
+                            */
+
+//        int prepareDecodedRecord(char *nullFieldsIndicator, std::vector<Attribute> columnDescriptor,
+//                                 std::vector<std::string> attrValues, void *buffer);
+
+        bool isFieldNull(char *nullFieldsIndicator, int i) const;
+
+//        void getTableIdUsingIterator(const std::vector<Attribute> &recordDescriptor_table,
+//                                     RBFM_ScanIterator &iterator4Table, int &tableId) const;
+
+        void orderRecordDescriptor(std::vector<Attribute> &recordDescriptor,
+                                   const void *columnPositions4RecordDescriptors) const;
+
+//    std::vector<Attribute>
+//    getRecordDescriptor(const std::string &tableName);
+
+//    void convertTypeToInt(int j, const std::vector<Attribute> &attrs, int &type) const;
+        int convertTypeToInt(AttrType type) const;
+
+        int prepareEncodedRecord(std::vector<Attribute> columnDescriptor, std::vector<std::string> attrValues, void *buffer);
+
+        int
+        getMaxIntValueOfColumnName(const std::string &columnName,
+                                   const std::string &filterName,
+                                   const CompOp compOp, const void *filterValue, const std::string &fileName,
+                                   std::vector<Attribute> recordDescriptors);
+
+        int getTableIdUsingTableName(const std::string tableName);
+
+        RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
+
+        bool isTableInSystemTable(const std::string &tableName);
+
+        std::vector<Attribute> getIndexesTableDescriptor();
+
+        std::string
+        getIndexFileName(const std::string &tableName, const std::string &attributeName) const;
+
+        bool isTableEmpty(const std::string &tableName) const;
+
+//        void getTableIdUsingTableName(const vector<Attribute> &recordDescriptor_table, const string &tableName,
+//                                      int &tableId) const;
+        int
+        prepareDecodedRecord(char *nullFieldsIndicator, vector<Attribute> columnDescriptor, vector<string> attrValues,
+                             void *buffer);
     };
 
 } // namespace PeterDB

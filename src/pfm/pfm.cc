@@ -16,29 +16,32 @@ namespace PeterDB {
     PagedFileManager &PagedFileManager::operator=(const PagedFileManager &) = default;
 
     RC PagedFileManager::createFile(const std::string &fileName) {
-        if(isFileExisting(fileName)){return 1;} //file already exists
+        if (isFileExisting(fileName)) { return 1; } //file already exists
         FILE *f = fopen(fileName.c_str(), "w");
-        if (!f) {return -1;} //Fail to create a new file.
+        if (!f) { return -1; } //Fail to create a new file.
         fclose(f);
+
+
         return 0;
     }
 
     RC PagedFileManager::isFileExisting(const std::string &fileName) const {
         FILE *f = fopen(fileName.c_str(), "r");
-        if (!f) {return false; } // file does not exist
+        if (!f) { return false; } // file does not exist
         fclose(f);
+
         return true;
     }
 
     RC PagedFileManager::destroyFile(const std::string &fileName) {
-        if(!isFileExisting(fileName)) {return -1;}
+        if (!isFileExisting(fileName)) { return -1; }
         return remove(fileName.c_str());  //Remove the file. 0: success; others: fail
     }
 
     RC PagedFileManager::openFile(const std::string &fileName, FileHandle &fileHandle) {
-        if(fileHandle.file) {return -1; } //this fileHandle has already been used;
+        if (fileHandle.file) { return -1; } //this fileHandle has already been used;
         //PagedFileManager failed to open the file: this file does not exist.
-        if (!(fileHandle.file = fopen(fileName.c_str(), "rb+"))) {return -1;}
+        if (!(fileHandle.file = fopen(fileName.c_str(), "rb+"))) { return -1; }
         //rwa
         fseek(fileHandle.file, 0, SEEK_SET);
         fread(&fileHandle.readPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
@@ -51,8 +54,9 @@ namespace PeterDB {
     }
 
     RC PagedFileManager::closeFile(FileHandle &fileHandle) {
-        if (!fileHandle.file) {return -1; }      //Unused fileHandle
-        if(fileHandle.appendPageCounter != 0 || fileHandle.writePageCounter != 0 || fileHandle.appendPageCounter != 0) {
+        if (!fileHandle.file) { return -1; }      //Unused fileHandle
+        if (fileHandle.appendPageCounter != 0 || fileHandle.writePageCounter != 0 ||
+            fileHandle.appendPageCounter != 0) {
             //r-w-a
             fileHandle.writePageCounter++;
             fseek(fileHandle.file, 0, SEEK_SET);
@@ -77,8 +81,8 @@ namespace PeterDB {
     FileHandle::~FileHandle() = default;
 
     RC FileHandle::readPage(PageNum pageNum, void *data) {
-        if (!this->file) {return -1;} //File does not exist.
-        if (getNumberOfPages() <= pageNum) {return -1; } //error: exceed the max page #
+        if (!this->file) { return -1; } //File does not exist.
+        if (getNumberOfPages() <= pageNum) { return -1; } //error: exceed the max page #
         long startPosition = PAGE_SIZE * (pageNum + 1);    //page # starts from 0; the first page is the hidden page
         fseek(file, startPosition, SEEK_SET); //move the pointer to the required page
         fread(data, 1, PAGE_SIZE, file);
@@ -88,8 +92,8 @@ namespace PeterDB {
 
 
     RC FileHandle::writePage(PageNum pageNum, const void *data) {
-        if (!this->file) {return -1;} //File does not exist.
-        if (getNumberOfPages() <= pageNum) {return -1; } //error: exceed the max page #
+        if (!this->file) { return -1; } //File does not exist.
+        if (getNumberOfPages() <= pageNum) { return -1; } //error: exceed the max page #
         long startPosition = PAGE_SIZE * (pageNum + 1);    //page # starts from 0
         fseek(file, startPosition, SEEK_SET); //move the pointer to the required page
         fwrite(data, 1, PAGE_SIZE, file);
@@ -100,17 +104,15 @@ namespace PeterDB {
 
 
     RC FileHandle::appendPage(const void *data) {
-        if(getNumberOfPages() == 0){ //totally empty file, even without a hidden page
-            void *hiddenPageData = malloc(PAGE_SIZE);
+        if (getNumberOfPages() == 0) { //totally empty file, even without a hidden page
+            char hiddenPageData[PAGE_SIZE];
             fseek(this->file, 0, SEEK_END);
             if (fwrite(hiddenPageData, PAGE_SIZE, 1, this->file) == 0) {
-                free(hiddenPageData);
                 return -1; //fail to add hidden page;
             }
-            free(hiddenPageData);
         }
         fseek(this->file, 0, SEEK_END);
-        if (fwrite(data, 1, PAGE_SIZE, this->file) == 0) {return -1; } //fail to append;
+        if (fwrite(data, 1, PAGE_SIZE, this->file) == 0) { return -1; } //fail to append;
         this->appendPageCounter++;
         fflush(file);
 //        fsync(fileno(file));
@@ -118,11 +120,11 @@ namespace PeterDB {
     }
 
     unsigned FileHandle::getNumberOfPages() {
-        if (!this->file) {return -1;} //File does not exist.
-        if (!file) {return -1;}
+        if (!this->file) { return -1; } //File does not exist.
+        if (!file) { return -1; }
         fseek(file, 0, SEEK_END);
         int numOfPages = 0;
-        if ((ftell(file) / PAGE_SIZE) - 1 > 0) {numOfPages = ftell(file) / PAGE_SIZE - 1;}
+        if ((ftell(file) / PAGE_SIZE) - 1 > 0) { numOfPages = ftell(file) / PAGE_SIZE - 1; }
 //        cout<<"---------------#of pgs= " <<numOfPages<<endl;
         return numOfPages;
     }

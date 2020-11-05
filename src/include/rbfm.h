@@ -53,7 +53,7 @@ namespace PeterDB {
     //    process the data;
     //  }
     //  rbfmScanIterator.close();
-
+    class RecordBasedFileManager;
     class RBFM_ScanIterator {
     public:
         RBFM_ScanIterator() = default;;
@@ -63,9 +63,35 @@ namespace PeterDB {
         // Never keep the results in the memory. When getNextRecord() is called,
         // a satisfying record needs to be fetched from the file.
         // "data" follows the same format as RecordBasedFileManager::insertRecord().
-        RC getNextRecord(RID &rid, void *data) { return RBFM_EOF; };
+        RC getNextRecord(RID &rid, void *data);
 
-        RC close() { return -1; };
+        RC close();// { return -1; };
+        //need to initialize
+        FileHandle iteratorHandle;
+        std::vector<Attribute> recordDescriptor;
+        std::vector<Attribute> selectedRecordDescriptor;
+        Attribute conditionAttributeAttr;
+        CompOp compOp;
+        void *filterValue = malloc(PAGE_SIZE);
+        std::vector<std::string> attributeNames;
+//    RID currentRid;
+        bool isIteratorNew; //用于判断是否需要从0， 0开始读
+
+        char pageData[PAGE_SIZE];
+        char tempData[PAGE_SIZE];
+        char tempData2;
+        char notFilteredData[PAGE_SIZE];
+        char encodedFilteredData[PAGE_SIZE];  //after filter
+        char encodedNotFilteredData[PAGE_SIZE]; //未经filter的encoded data
+//    RecordBasedFileManager &rbfm;
+        bool isDescriptorRequired(const std::vector<std::string> &attributeNames, const std::string &name) const;
+
+//    bool getIsRecordSatisfied(const RID &rid, RecordBasedFileManager &rbfm, void *attrDataToFilter, FileHandle handle) const;
+
+        bool getIsRecordSatisfied(const RID rid, RecordBasedFileManager &rbfm, FileHandle handle) const;
+
+        int getTheCurrentData(RID rid, void *data, RecordBasedFileManager &rbfm);
+
     };
 
     class RecordBasedFileManager {
@@ -134,6 +160,16 @@ namespace PeterDB {
                 const void *value,                    // used in the comparison
                 const std::vector<std::string> &attributeNames, // a list of projected attributes
                 RBFM_ScanIterator &rbfm_ScanIterator);
+        int encodeRecordData_returnSlotLength(const std::vector<Attribute> &recordDescriptor, const void *data, void *encodedData);
+
+        RC insertEncodedRecord(FileHandle &fileHandle, RID &rid, const void *encodedData, int slotLength);
+
+        RC isFileExisting(const string &fileName);
+        int getSlotTableLength(void *pageData);
+        int decodeData(const vector <Attribute> &recordDescriptor, void *data, const void *encodedData);
+
+
+        RC printEncodedRecord(const vector<Attribute> &recordDescriptor, const void *data);
 
     protected:
         RecordBasedFileManager();                                                   // Prevent construction
@@ -141,16 +177,12 @@ namespace PeterDB {
         RecordBasedFileManager(const RecordBasedFileManager &);                     // Prevent construction by copying
         RecordBasedFileManager &operator=(const RecordBasedFileManager &);          // Prevent assignment
 
-        int encodeRecordData_returnSlotLength(const std::vector<Attribute> &recordDescriptor, const void *data, void *encodedData);
-
-        RC insertEncodedRecord(FileHandle &fileHandle, RID &rid, const void *encodedData, int slotLength);
 
         void getOffsetAndLengthUsingSlotNum(const int slotNum, const void *pageData, int slotTableLen, int &offset,
                                        int &length) const;
 
         void getRealDirectedPageNumAndSlotNum(int offset, int length, RID &directedRid) const;
 
-        int decodeData(const vector <Attribute> &recordDescriptor, void *data, const void *encodedData);
 
         void formDataPageAfterDelete(void *pageData, int slotTableLen, int offset, int length,
                                      const void *newPageData);
@@ -198,9 +230,9 @@ namespace PeterDB {
         int getFreeSpc(void *pageData);
 //        int getFreeSpc(void *pageData, int slotTableLen);
 
-        int getSlotTableLength(void *pageData);
 
-        void updateSlotTableWithSlotNum(void *slotTable, int slotNum, int slotLength, int offset4NewRecord) const;
+
+//        void updateSlotTableWithSlotNum(void *slotTable, int slotNum, int slotLength, int offset4NewRecord) const;
 
 //        void updateFreeSpc(void *newPageData, int freeSpc) const;
 //
@@ -209,10 +241,10 @@ namespace PeterDB {
 //        void updateSlotTableLen(void *newPageData, int slotTableLen) const;
         void updateLastInteger(void *newPageData, int val, int idx);
 
-        void formDataPageAfterDelete_SlotTableNotUpdated(void *pageData, int slotTableLen, int offset, int length,
-                                                         const void *newPageData);
+//        void formDataPageAfterDelete_SlotTableNotUpdated(void *pageData, int slotTableLen, int offset, int length,
+//                                                         const void *newPageData);
 
-        int getFreeSpc(char *pageData, int slotTableLen);
+//        int getFreeSpc(char *pageData, int slotTableLen);
 
         void
         formDataPageAfterUpdate(char *newPageData, const char *pageData, const void *data,
@@ -224,6 +256,7 @@ namespace PeterDB {
         void updateSlotTableLen(void *pageData, int len);
 
         void addPageTail(void *pageData, int freeSpc, char *slotTable, int slotTableLen);
+
     };
 
 } // namespace PeterDB
