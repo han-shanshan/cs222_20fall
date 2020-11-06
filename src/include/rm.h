@@ -29,6 +29,7 @@ namespace PeterDB {
         RC close();
 
         RBFM_ScanIterator rbfm_scanner;
+        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
     };
 
     // Relation Manager
@@ -86,7 +87,7 @@ namespace PeterDB {
 
         Attribute attribute(std::string name, AttrType type, int length);
 
-        RC isTableAlreadyExisted(const std::string &tableName) const;
+//        RC isTableAlreadyExisted(const std::string &tableName) const;
 
         std::vector<Attribute> getTablesTableDescriptor();
 

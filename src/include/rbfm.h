@@ -77,12 +77,9 @@ namespace PeterDB {
 //    RID currentRid;
         bool isIteratorNew; //用于判断是否需要从0， 0开始读
 
-        char pageData[PAGE_SIZE];
-        char tempData[PAGE_SIZE];
-        char tempData2;
-        char notFilteredData[PAGE_SIZE];
-        char encodedFilteredData[PAGE_SIZE];  //after filter
-        char encodedNotFilteredData[PAGE_SIZE]; //未经filter的encoded data
+//        char pageData[PAGE_SIZE];
+//        char tempData[PAGE_SIZE];
+//        char notFilteredData[PAGE_SIZE];
 //    RecordBasedFileManager &rbfm;
         bool isDescriptorRequired(const std::vector<std::string> &attributeNames, const std::string &name) const;
 
@@ -90,7 +87,7 @@ namespace PeterDB {
 
         bool getIsRecordSatisfied(const RID rid, RecordBasedFileManager &rbfm, FileHandle handle) const;
 
-        int getTheCurrentData(RID rid, void *data, RecordBasedFileManager &rbfm);
+        int getTheCurrentData(RID rid, void *data);
 
     };
 
