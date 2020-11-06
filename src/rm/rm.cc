@@ -23,22 +23,22 @@ namespace PeterDB {
 //    RelationManager &RelationManager::operator=(const RelationManager &) = default;
 
     RC RelationManager::createCatalog() {
-//        int table_res = rbfm.createFile(TABLE_CATALOG_FILE_NAME);
-//        int column_res = rbfm.createFile(COLUMN_CATALOG_FILE_NAME);
-//        int index_res = rbfm.createFile(INDEX_CATALOG_FILE_NAME);
+//        int table_res = rbfm.createFile(TABLE_CATALOG_FILE);
+//        int column_res = rbfm.createFile(COLUMN_CATALOG_FILE);
+//        int index_res = rbfm.createFile(INDEX_CATALOG_FILE);
 //
 //        if(table_res != 0 || column_res != 0 || index_res != 0){
 //            cout<<"RelationManager fails to create the catalog file."<<endl;
 //            return -1;
 //        }
-        if(rbfm.isFileExisting(TABLE_CATALOG_FILE_NAME)){rbfm.destroyFile(TABLE_CATALOG_FILE_NAME);} // for test cases: they do not delete system tables after runnning
-        if(rbfm.isFileExisting(COLUMN_CATALOG_FILE_NAME)){rbfm.destroyFile(COLUMN_CATALOG_FILE_NAME);} // for test cases: they do not delete system tables after runnning
-//        if(rbfm.isFileExisting(INDEX_CATALOG_FILE_NAME)){rbfm.destroyFile(INDEX_CATALOG_FILE_NAME);} // for test cases: they do not delete system tables after runnning
+        if(rbfm.isFileExisting(TABLE_CATALOG_FILE)){rbfm.destroyFile(TABLE_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
+        if(rbfm.isFileExisting(COLUMN_CATALOG_FILE)){rbfm.destroyFile(COLUMN_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
+//        if(rbfm.isFileExisting(INDEX_CATALOG_FILE)){rbfm.destroyFile(INDEX_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
 
         //Tables (table-id:int, table-name:varchar(50), file-name:varchar(50))
         //Columns(table-id:int, column-name:varchar(50), column-type:int, column-length:int, column-position:int)
-        if(createTable(TABLES_TABLE_NAME, getTablesTableDescriptor()) == 0
-           && createTable(COLUMNS_TABLE_NAME, getColumnsTableDescriptor()) == 0
+        if(createTable(TABLE_CATALOG_FILE, getTablesTableDescriptor()) == 0
+           && createTable(COLUMN_CATALOG_FILE, getColumnsTableDescriptor()) == 0
 //           && createSystemTable(INDEXES_TABLE_NAME, getIndexesTableDescriptor()) == 0
            ){return 0;}
         else
@@ -84,7 +84,7 @@ namespace PeterDB {
 
     RC RelationManager::deleteCatalog() {
         FileHandle fileHandle;
-        RC rc = rbfm.openFile(TABLE_CATALOG_FILE_NAME, fileHandle);
+        RC rc = rbfm.openFile(TABLE_CATALOG_FILE, fileHandle);
         if(rc != 0){ return -1; } //cout<<"fail to delete the record: the file has already been deleted."<<endl;
 
         RBFM_ScanIterator iterator;
@@ -100,15 +100,15 @@ namespace PeterDB {
 //        memset(iterator.tempData, 0, PAGE_SIZE);//null indicator + varcharlen + varchar
         int fileNameLen = 0;
         int res = 0;
-        string tablesTableName = TABLES_TABLE_NAME;
-        string columnsTableName = COLUMNS_TABLE_NAME;
+        string tablesTableName = TABLE_CATALOG_FILE;
+        string columnsTableName = COLUMN_CATALOG_FILE;
         char tempData[PAGE_SIZE];
 
         while (iterator.getNextRecord(rid, tempData) != RM_EOF) {
             memcpy(&fileNameLen, (char*)tempData + 1, sizeof(int));
             string fileName((char*)tempData + 1 + sizeof(int), fileNameLen);
-            string tablesTableName = TABLES_TABLE_NAME; //((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
-            string columnsTableName = COLUMNS_TABLE_NAME; //((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
+            string tablesTableName = TABLE_CATALOG_FILE; //((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
+            string columnsTableName = COLUMN_CATALOG_FILE; //((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
             if(strcmp(fileName.c_str(), tablesTableName.c_str()) != 0
                && strcmp(fileName.c_str(), columnsTableName.c_str()) != 0){
                 rbfm.destroyFile(fileName);
@@ -116,9 +116,9 @@ namespace PeterDB {
             memset(tempData, 0, PAGE_SIZE);
         }
         iterator.close();
-        res = rbfm.destroyFile(TABLE_CATALOG_FILE_NAME);
-        res = rbfm.destroyFile(COLUMN_CATALOG_FILE_NAME);
-        res = rbfm.destroyFile(INDEX_CATALOG_FILE_NAME);
+        res = rbfm.destroyFile(TABLE_CATALOG_FILE);
+        res = rbfm.destroyFile(COLUMN_CATALOG_FILE);
+        res = rbfm.destroyFile(INDEX_CATALOG_FILE);
 //        res = rbfm.destroyFile(SYSTEM_FILE_NAME);
         rbfm.closeFile(fileHandle);
         // Todo 删除所有index 文件
@@ -147,21 +147,17 @@ namespace PeterDB {
 //    }
 
     bool RelationManager::isTableInSystemTable(const string &tableName){
-        if(strcmp(tableName.c_str(), TABLES_TABLE_NAME) == 0) {return true;}
-        if(strcmp(tableName.c_str(), COLUMNS_TABLE_NAME) == 0) {return true;}
-//        if(strcmp(tableName.c_str(), SYSTEM_FILE_NAME) == 0) {return true;}
-        if(strcmp(tableName.c_str(), INDEXES_TABLE_NAME) == 0) {return true;}
-        if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE_NAME) == 0) {return true;}
-        if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE_NAME) == 0) {return true;}
-        if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE_NAME) == 0) {return true;}
+        if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0) {return true;}
+        if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0) {return true;}
+        if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE) == 0) {return true;}
         return false;
     }
 
 
     RC RelationManager::createTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
-//        string tablCatalogFile = TABLE_CATALOG_FILE_NAME;
-        if((!rbfm.isFileExisting(TABLE_CATALOG_FILE_NAME) )&&
-          !isTableInSystemTable(tableName)) {return -1;} // catalog file does not exist
+//        string tablCatalogFile = TABLE_CATALOG_FILE;
+        if((!rbfm.isFileExisting(TABLE_CATALOG_FILE) ) &&
+           !isTableInSystemTable(tableName)) {return -1;} // catalog file does not exist
         if (rbfm.isFileExisting(tableName)) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
 
         //if this table already exists, return 1;
@@ -172,7 +168,7 @@ namespace PeterDB {
         //to get max table id
         string columnName = "table-id";
         char value[PAGE_SIZE];
-        int tableId = 1 + getMaxIntValueOfColumnName(columnName, "", NO_OP, value, TABLE_CATALOG_FILE_NAME, tablesTableDescriptor);
+        int tableId = 1 + getMaxIntValueOfColumnName(columnName, "", NO_OP, value, TABLE_CATALOG_FILE, tablesTableDescriptor);
         vector<string> tableAttrValues;
         tableAttrValues.push_back(to_string(tableId));
         tableAttrValues.push_back(tableName);//tablename
@@ -187,7 +183,7 @@ namespace PeterDB {
 //        std::stringstream stream;
 //        rbfm.printRecord(tablesTableDescriptor, buffer, stream);
         FileHandle tablCatalogFH;
-        rbfm.openFile(TABLE_CATALOG_FILE_NAME, tablCatalogFH);
+        rbfm.openFile(TABLE_CATALOG_FILE, tablCatalogFH);
         std::stringstream stream;
         rbfm.printRecord(tablesTableDescriptor, buffer, stream);
         rbfm.insertRecord(tablCatalogFH, tablesTableDescriptor, buffer, tableRid);
@@ -200,7 +196,7 @@ namespace PeterDB {
         //    attr.type = TypeInt;
         //    attr.length = (AttrLength) 4;
         FileHandle colCatalogFH;
-        rbfm.openFile(COLUMN_CATALOG_FILE_NAME, colCatalogFH);
+        rbfm.openFile(COLUMN_CATALOG_FILE, colCatalogFH);
         vector<string> columnAttrValues;
         vector<Attribute> colTableDescriptor = getColumnsTableDescriptor();
         memset(nullsIndicator, 0, 1);//
@@ -387,7 +383,7 @@ namespace PeterDB {
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
         vector<string> attributeNames2;
         FileHandle fileHandle_table;
-        rbfm.openFile(TABLE_CATALOG_FILE_NAME, fileHandle_table);
+        rbfm.openFile(TABLE_CATALOG_FILE, fileHandle_table);
         char filterValue[PAGE_SIZE];
         char tempData[PAGE_SIZE];
         memcpy(filterValue, &tableId, sizeof(int));
@@ -405,7 +401,7 @@ namespace PeterDB {
 
         /////////////////////////////////delete records in Columns table
         FileHandle fileHandle_column;
-        rbfm.openFile(COLUMN_CATALOG_FILE_NAME, fileHandle_column);
+        rbfm.openFile(COLUMN_CATALOG_FILE, fileHandle_column);
         //filterValue is also tableId
         rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
                   EQ_OP, filterValue, attributeNames2, columnIterator);
@@ -437,7 +433,7 @@ namespace PeterDB {
         RBFM_ScanIterator tableIdIterator;
         int tableId;
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
-        rbfm.openFile(TABLE_CATALOG_FILE_NAME, fileHandle_table);
+        rbfm.openFile(TABLE_CATALOG_FILE, fileHandle_table);
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
 ////////////////////////////////////delete records in Tables table
@@ -460,17 +456,17 @@ namespace PeterDB {
 
 
     RC RelationManager::getAttributes(const std::string &tableName, std::vector<Attribute> &attrs) {
-        if(strcmp(tableName.c_str(), TABLES_TABLE_NAME) == 0 ){
+        if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0 ){
             attrs = getTablesTableDescriptor();
             return 0;
         }
-        if(strcmp(tableName.c_str(), COLUMNS_TABLE_NAME) == 0 ){
+        if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0 ){
             attrs =  getColumnsTableDescriptor();
             return 0;
         }
 
         FileHandle fileHandle;
-        rbfm.openFile(COLUMN_CATALOG_FILE_NAME, fileHandle);
+        rbfm.openFile(COLUMN_CATALOG_FILE, fileHandle);
 //    cout<<"table name = "<<tableName<<endl;
         char columnPositions4RecordDescriptors[PAGE_SIZE];
         int columnPositions4RecordDescriptors_offset = 0;
@@ -651,11 +647,11 @@ namespace PeterDB {
         FileHandle fileHandle;
         if(!rbfm.isFileExisting(tableName)) {return -1;}
 
-        if(strcmp(tableName.c_str(), TABLES_TABLE_NAME) == 0 ){
-            rbfm.openFile(TABLE_CATALOG_FILE_NAME, fileHandle);
+        if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0 ){
+            rbfm.openFile(TABLE_CATALOG_FILE, fileHandle);
         }
-        else if(strcmp(tableName.c_str(), COLUMNS_TABLE_NAME) == 0 ){
-            rbfm.openFile(COLUMN_CATALOG_FILE_NAME, fileHandle);
+        else if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0 ){
+            rbfm.openFile(COLUMN_CATALOG_FILE, fileHandle);
         }else rbfm.openFile(tableName, fileHandle);
 //    RBFM_ScanIterator rbfmScanner;
         vector<Attribute> recordDescriptor;
