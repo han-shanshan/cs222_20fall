@@ -23,19 +23,22 @@ namespace PeterDB {
 //    RelationManager &RelationManager::operator=(const RelationManager &) = default;
 
     RC RelationManager::createCatalog() {
-        int table_res = rbfm.createFile(TABLE_CATALOG_FILE_NAME);
-        int column_res = rbfm.createFile(COLUMN_CATALOG_FILE_NAME);
-        int index_res = rbfm.createFile(INDEX_CATALOG_FILE_NAME);
-//        int system_res = rbfm.createFile(SYSTEM_FILE_NAME);
+//        int table_res = rbfm.createFile(TABLE_CATALOG_FILE_NAME);
+//        int column_res = rbfm.createFile(COLUMN_CATALOG_FILE_NAME);
+//        int index_res = rbfm.createFile(INDEX_CATALOG_FILE_NAME);
+//
+//        if(table_res != 0 || column_res != 0 || index_res != 0){
+//            cout<<"RelationManager fails to create the catalog file."<<endl;
+//            return -1;
+//        }
+        if(rbfm.isFileExisting(TABLE_CATALOG_FILE_NAME)){rbfm.destroyFile(TABLE_CATALOG_FILE_NAME);} // for test cases: they do not delete system tables after runnning
+        if(rbfm.isFileExisting(COLUMN_CATALOG_FILE_NAME)){rbfm.destroyFile(COLUMN_CATALOG_FILE_NAME);} // for test cases: they do not delete system tables after runnning
+//        if(rbfm.isFileExisting(INDEX_CATALOG_FILE_NAME)){rbfm.destroyFile(INDEX_CATALOG_FILE_NAME);} // for test cases: they do not delete system tables after runnning
 
-        if(table_res != 0 || column_res != 0 || index_res != 0){
-            cout<<"RelationManager fails to create the catalog file."<<endl;
-            return -1;
-        }
         //Tables (table-id:int, table-name:varchar(50), file-name:varchar(50))
         //Columns(table-id:int, column-name:varchar(50), column-type:int, column-length:int, column-position:int)
-        if(createSystemTable(TABLES_TABLE_NAME, getTablesTableDescriptor()) == 0
-           && createSystemTable(COLUMNS_TABLE_NAME, getColumnsTableDescriptor()) == 0
+        if(createTable(TABLES_TABLE_NAME, getTablesTableDescriptor()) == 0
+           && createTable(COLUMNS_TABLE_NAME, getColumnsTableDescriptor()) == 0
 //           && createSystemTable(INDEXES_TABLE_NAME, getIndexesTableDescriptor()) == 0
            ){return 0;}
         else
@@ -122,26 +125,26 @@ namespace PeterDB {
         return 0;
     }
 
-
-    RC RelationManager::createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
-        if(!isTableInSystemTable(tableName)) {
-            return -1;
-        }
-        if(rbfm.isFileExisting(tableName)){
-            rbfm.destroyFile(tableName); // for test cases: they do not delete system tables after runnning
-//            return -1; //table already exists.
-        }
-//        int table2NameLen = tableName.length();
-//        void *systemRecord = malloc(sizeof(int) + tableNameLen);
-//        memcpy((char*)systemRecord, &tableNameLen, sizeof(int));
-//        memcpy((char*)systemRecord + sizeof(int), tableName.c_str(), tableNameLen);
-//        FileHandle systemFH;
-//        rbfm.openFile(systemFile, systemFH);
-//        RID rid;
-//        rbfm.insertEncodedRecord(systemFH, rid, systemRecord, sizeof(int) + tableNameLen);
-//        rbfm.closeFile(systemFH);
-        return createTable(tableName, attrs);
-    }
+//
+//    RC RelationManager::createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
+//        if(!isTableInSystemTable(tableName)) {
+//            return -1;
+//        }
+////        if(rbfm.isFileExisting(tableName)){
+////            rbfm.destroyFile(tableName); // for test cases: they do not delete system tables after runnning
+//////            return -1; //table already exists.
+////        }
+////        int table2NameLen = tableName.length();
+////        void *systemRecord = malloc(sizeof(int) + tableNameLen);
+////        memcpy((char*)systemRecord, &tableNameLen, sizeof(int));
+////        memcpy((char*)systemRecord + sizeof(int), tableName.c_str(), tableNameLen);
+////        FileHandle systemFH;
+////        rbfm.openFile(systemFile, systemFH);
+////        RID rid;
+////        rbfm.insertEncodedRecord(systemFH, rid, systemRecord, sizeof(int) + tableNameLen);
+////        rbfm.closeFile(systemFH);
+//        return createTable(tableName, attrs);
+//    }
 
     bool RelationManager::isTableInSystemTable(const string &tableName){
         if(strcmp(tableName.c_str(), TABLES_TABLE_NAME) == 0) {return true;}
@@ -156,12 +159,11 @@ namespace PeterDB {
 
 
     RC RelationManager::createTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
-        FileHandle tablCatalogFH;
-        string tablCatalogFile = TABLE_CATALOG_FILE_NAME;
-        if(!rbfm.isFileExisting(tablCatalogFile)) {return -1;} // catalog file does not exist
+//        string tablCatalogFile = TABLE_CATALOG_FILE_NAME;
+        if((!rbfm.isFileExisting(TABLE_CATALOG_FILE_NAME) )&&
+          !isTableInSystemTable(tableName)) {return -1;} // catalog file does not exist
         if (rbfm.isFileExisting(tableName)) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
 
-//
         //if this table already exists, return 1;
         rbfm.createFile(tableName);
         RID tableRid;
@@ -184,7 +186,10 @@ namespace PeterDB {
 //    cout<<"insert: ";
 //        std::stringstream stream;
 //        rbfm.printRecord(tablesTableDescriptor, buffer, stream);
-        rbfm.openFile(tablCatalogFile, tablCatalogFH);
+        FileHandle tablCatalogFH;
+        rbfm.openFile(TABLE_CATALOG_FILE_NAME, tablCatalogFH);
+        std::stringstream stream;
+        rbfm.printRecord(tablesTableDescriptor, buffer, stream);
         rbfm.insertRecord(tablCatalogFH, tablesTableDescriptor, buffer, tableRid);
         rbfm.closeFile(tablCatalogFH);
 
@@ -196,12 +201,9 @@ namespace PeterDB {
         //    attr.length = (AttrLength) 4;
         FileHandle colCatalogFH;
         rbfm.openFile(COLUMN_CATALOG_FILE_NAME, colCatalogFH);
-//        vector<Attribute> columnsTable2Descriptor = getColumnsTableDescriptor();
         vector<string> columnAttrValues;
         vector<Attribute> colTableDescriptor = getColumnsTableDescriptor();
         memset(nullsIndicator, 0, 1);//
-//        void * nullsIndicator2 = malloc(1);
-//        memcpy()
 
         RID columnRid;
         int columnPosition = 1;
@@ -217,7 +219,6 @@ namespace PeterDB {
             //prepare the column buffer
             memset(buffer, 0, PAGE_SIZE);
             prepareDecodedRecord(nullsIndicator, colTableDescriptor, columnAttrValues, buffer);
-            std::stringstream stream;
             rbfm.printRecord(colTableDescriptor, buffer, stream);
             rbfm.insertRecord(colCatalogFH, colTableDescriptor, buffer, columnRid);
 //        this->printTuple(columnsTableDescriptor, buffer);
@@ -397,7 +398,7 @@ namespace PeterDB {
         if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
 //        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
             rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
-            memset(tempData, 0, PAGE_SIZE);
+//            memset(tempData, 0, PAGE_SIZE);
         }
         tableIterator.close();
         rbfm.closeFile(fileHandle_table);
@@ -439,8 +440,6 @@ namespace PeterDB {
         rbfm.openFile(TABLE_CATALOG_FILE_NAME, fileHandle_table);
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
-//        void *filterValue = malloc(PAGE_SIZE);
-//        memcpy(filterValue, &tableId, sizeof(int));
 ////////////////////////////////////delete records in Tables table
         char filterValue[PAGE_SIZE]; // sizeof(int) + table name
         int tableNameLen = tableName.length();
@@ -448,13 +447,11 @@ namespace PeterDB {
         memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
         rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
                   EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
-//        memset(tableIdIterator.tempData, 0, PAGE_SIZE);
         char tempData[PAGE_SIZE];
 
         if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-            tableId = *(int*)&tempData;
-//            memcpy(&tableId, tempData, INT_FIELD_LEN);
-            memset(tempData, 0, PAGE_SIZE);
+            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
+            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
         }
         tableIdIterator.close();
         rbfm.closeFile(fileHandle_table);
@@ -630,7 +627,7 @@ namespace PeterDB {
 
 
     RC RelationManager::printTuple(const std::vector<Attribute> &attrs, const void *data, std::ostream &out) {
-//        rbfm.printRecord(attrs, data);
+        rbfm.printRecord(attrs, data, out);
         return 0;
     }
 
@@ -652,6 +649,7 @@ namespace PeterDB {
                              const std::vector<std::string> &attributeNames,
                              RM_ScanIterator &rm_ScanIterator) {
         FileHandle fileHandle;
+        if(!rbfm.isFileExisting(tableName)) {return -1;}
 
         if(strcmp(tableName.c_str(), TABLES_TABLE_NAME) == 0 ){
             rbfm.openFile(TABLE_CATALOG_FILE_NAME, fileHandle);

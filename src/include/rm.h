@@ -8,9 +8,12 @@
 
 namespace PeterDB {
 #define RM_EOF (-1)  // end of a scan operator
-    static const char *const TABLE_CATALOG_FILE_NAME = "catalog-table";
-    static const char *const COLUMN_CATALOG_FILE_NAME = "catalog-column";
-    static const char *const INDEX_CATALOG_FILE_NAME = "catalog-index";
+//    static const char *const TABLE_CATALOG_FILE_NAME = "catalog-table";
+//    static const char *const COLUMN_CATALOG_FILE_NAME = "catalog-column";
+//    static const char *const INDEX_CATALOG_FILE_NAME = "catalog-index";
+    static const char *const TABLE_CATALOG_FILE_NAME = "Tables";
+    static const char *const COLUMN_CATALOG_FILE_NAME = "Columns";
+    static const char *const INDEX_CATALOG_FILE_NAME = "Indexes";
     static const char *const TABLES_TABLE_NAME = "Tables";
     static const char *const COLUMNS_TABLE_NAME = "Columns";
     static const char *const INDEXES_TABLE_NAME = "Indexes";

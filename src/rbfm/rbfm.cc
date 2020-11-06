@@ -473,13 +473,13 @@ namespace PeterDB {
                     int int_attr;
                     memcpy(&int_attr,(char*)data+offset,recordDescriptor[i].length);
                     offset += recordDescriptor[i].length;
-                    cout<<"    "<<recordDescriptor[i].name << ": " << int_attr;
+                    out<<"    "<<recordDescriptor[i].name << ": " << int_attr;
                 }
                 else if(recordDescriptor[i].type == TypeReal){
                     float floatValue = 0;
                     memcpy(&floatValue,(char*)data+offset,recordDescriptor[i].length);
                     offset += recordDescriptor[i].length;
-                    cout <<"    "<<recordDescriptor[i].name << ": " << floatValue;
+                    out <<"    "<<recordDescriptor[i].name << ": " << floatValue;
                 }else { //  TypeVarChar
                     int varcharLen = 0;
                     memcpy(&varcharLen, (char *)data + offset, sizeof(int));
@@ -487,7 +487,7 @@ namespace PeterDB {
                     offset += sizeof(int);
                     memcpy(strValue,(char*)data+offset,varcharLen);
                     offset += varcharLen;
-                    cout <<"    "<<recordDescriptor[i].name << ": " ;//
+                    out <<"    "<<recordDescriptor[i].name << ": " ;//
                     printStr(varcharLen, strValue, out);
 //                cout<<endl;
                     free(strValue);
@@ -496,14 +496,14 @@ namespace PeterDB {
             else{cout << recordDescriptor[i].name << ": NULL"; }
             if(i < recordDescriptor.size() - 1) {out<<", ";}
         }
-        cout<<endl;
+        out<<endl;
         free(nullIndicatorStr);
         return 0;
     }
 
     void RecordBasedFileManager::printStr(int varcharLen, const char *strValue, std::ostream &out) const {
         for(int i = 0; i < varcharLen; i++){
-            cout<<*(char*)(strValue + i);
+            out<<*(char*)(strValue + i);
         }
     }
 
@@ -676,7 +676,8 @@ namespace PeterDB {
                                     RBFM_ScanIterator &rbfm_ScanIterator) {
         //    Attribute conditionAttributeAttr;
         rbfm_ScanIterator.isIteratorNew = true;
-        if(conditionAttribute.length() == 0 ){
+        int aa = conditionAttribute.length();
+        if(conditionAttribute.length() == 0 || compOp == NO_OP){
             rbfm_ScanIterator.conditionAttributeAttr.length = -1;
             rbfm_ScanIterator.conditionAttributeAttr.name = "";
         }
@@ -692,7 +693,6 @@ namespace PeterDB {
                 rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
             }
         }
-//    this->openFile(fileHandle.getFileName(), rbfm_ScanIterator.iteratorHandle);
 
         rbfm_ScanIterator.iteratorHandle = fileHandle;
         rbfm_ScanIterator.attributeNames = attributeNames;
@@ -718,6 +718,10 @@ namespace PeterDB {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         RC readPage_res, read_res = -1;
         // todo: pagenum slot num = 0?
+        if(rid.slotNum > PAGE_SIZE/(2 * INT_FIELD_LEN) || rid.pageNum >= iteratorHandle.getNumberOfPages()){
+            rid.slotNum = 0;
+            rid.pageNum = 0;
+        }
         char tempData[PAGE_SIZE];
         if(isIteratorNew){
             rid.slotNum = 0;
@@ -728,7 +732,7 @@ namespace PeterDB {
             }
             memset(tempData, 0, PAGE_SIZE);
             if(getTheCurrentData(rid, tempData) == 0) {
-                memcpy(data, tempData, 200);
+                memcpy(data, tempData, 300);
                 return 0;
             }
         }
@@ -749,9 +753,7 @@ namespace PeterDB {
                 memset(currentData, 0, PAGE_SIZE);
             }
             if (read_res == 0) {
-//            cout<<"print page data: "<<endl;
-//            rbfm.printStr(200, (char*)this->pageData);
-                memcpy(data, currentData, 200);
+                memcpy(data, currentData, 300);
                 break;
             }
             rid.pageNum++;
@@ -774,7 +776,7 @@ namespace PeterDB {
 
         //判断是否满足filter条件，如果不满足，则set read_res to -1
         rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
-//    rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
+//        rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
 
         //add filter. 如果没有通过filter则set read_res to -1
         int read_res = 0;
@@ -789,7 +791,6 @@ namespace PeterDB {
                 encodedNotFilteredDataOffset += sizeof(int);
                 if (isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
                     memcpy((char *) encodedFilteredData + encodedDataOffset, &fieldLen, sizeof(int));
-
                     encodedDataOffset += sizeof(int);
                     if(fieldLen != -1) { //not null
                         memcpy((char *) encodedFilteredData + encodedDataOffset,
