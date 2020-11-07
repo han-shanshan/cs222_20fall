@@ -718,16 +718,16 @@ namespace PeterDB {
 //        rbfm_ScanIterator.attributeNames = attributeNames;
 //        rbfm_ScanIterator.recordDescriptor = recordDescriptor;
 //        rbfm_ScanIterator.compOp = compOp;
-//        if (compOp != NO_OP) {
-//            if (rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar) {
-//                int varcharLen = 0;
-////                cout<<"value:"<<value<<endl;
-//                memcpy(&varcharLen, value, sizeof(int));
-//                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int) + varcharLen);
-//            } else {
-//                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int));
-//            }
-//        }
+        if (compOp != NO_OP) {
+            if (rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar) {
+                int varcharLen = 0;
+//                cout<<"value:"<<value<<endl;
+                memcpy(&varcharLen, value, sizeof(int));
+                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int) + varcharLen);
+            } else {
+                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int));
+            }
+        }
 
         return 0;
     }
