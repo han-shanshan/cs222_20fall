@@ -363,11 +363,11 @@ namespace PeterDB {
         if(!rbfm.isFileExisting(tableName)) {
             return -1; //table does not exist
         }
-        RBFM_ScanIterator tableIterator, columnIterator;
-        int tableId = getTableIdUsingTableName(tableName);
-        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
-        int rc = rbfm.destroyFile(tableName);
-        if (rc != 0) return -1;
+//        RBFM_ScanIterator tableIterator, columnIterator;
+//        int tableId = getTableIdUsingTableName(tableName);
+//        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
+//        int rc = rbfm.destroyFile(tableName);
+//        if (rc != 0) return -1;
 //        RID tableRid, columnRid;
 //        tableRid.pageNum = 0;
 //        tableRid.slotNum = 0;
