@@ -427,7 +427,8 @@ namespace PeterDB {
         RBFM_ScanIterator tableIdIterator;
         int tableId;
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
-        rbfm.openFile(TABLE_CATALOG_FILE, fileHandle_table);
+        string table_file = TABLE_CATALOG_FILE;
+        rbfm.openFile(table_file, fileHandle_table);
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
 ////////////////////////////////////delete records in Tables table
