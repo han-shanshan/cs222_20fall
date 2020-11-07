@@ -383,15 +383,15 @@ namespace PeterDB {
         char tempData[PAGE_SIZE];
         memcpy(filterValue, &tableId, sizeof(int));
         ////////////////////////////////////delete records in Tables table
-        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
-                  EQ_OP, filterValue, attributeNames2, tableIterator);
+//        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
+//                  EQ_OP, filterValue, attributeNames2, tableIterator);
 
 //        if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
 ////        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
 ////            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
 ////            if(res != 0) {return -1; }
 //        }
-        tableIterator.close();
+//        tableIterator.close();
         rbfm.closeFile(fileHandle_table);
 //
 //        /////////////////////////////////delete records in Columns table
