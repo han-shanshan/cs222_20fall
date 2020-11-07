@@ -365,6 +365,7 @@ namespace PeterDB {
         }
         RBFM_ScanIterator tableIterator, columnIterator;
         int tableId = getTableIdUsingTableName(tableName);
+        tableId = 0;
         if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
