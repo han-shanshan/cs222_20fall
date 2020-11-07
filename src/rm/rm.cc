@@ -381,8 +381,8 @@ namespace PeterDB {
         string table_catalog_file = TABLE_CATALOG_FILE;
         rbfm.openFile(table_catalog_file, fileHandle_table);
         char filterValue[PAGE_SIZE];
-        char tempData[PAGE_SIZE];
-        memcpy(filterValue, &tableId, sizeof(int));
+//        char tempData[PAGE_SIZE];
+        memcpy((char*)filterValue, &tableId, sizeof(int));
         //////////////////////////////////delete records in Tables table
 //        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
 //                  EQ_OP, filterValue, attributeNames2, tableIterator);
@@ -393,7 +393,7 @@ namespace PeterDB {
 //            if(res != 0) {return -1; }
 //        }
 //        tableIterator.close();
-//        rbfm.closeFile(fileHandle_table);
+        rbfm.closeFile(fileHandle_table);
 
         /////////////////////////////////delete records in Columns table
 //        FileHandle fileHandle_column;
