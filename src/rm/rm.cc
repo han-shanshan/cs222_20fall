@@ -364,8 +364,8 @@ namespace PeterDB {
             return -1; //table does not exist
         }
         RBFM_ScanIterator tableIterator, columnIterator;
-        int tableId = getTableIdUsingTableName(tableName);
-        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
+//        int tableId = getTableIdUsingTableName(tableName);
+//        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
         RID tableRid, columnRid;
@@ -381,7 +381,7 @@ namespace PeterDB {
         rbfm.openFile(table_catalog_file, fileHandle_table);
         char filterValue[PAGE_SIZE];
         char tempData[PAGE_SIZE];
-        memcpy(filterValue, &tableId, sizeof(int));
+//        memcpy(filterValue, &tableId, sizeof(int));
         ////////////////////////////////////delete records in Tables table
 //        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
 //                  EQ_OP, filterValue, attributeNames2, tableIterator);
