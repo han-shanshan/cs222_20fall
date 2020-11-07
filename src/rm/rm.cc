@@ -359,7 +359,7 @@ namespace PeterDB {
 
 
     RC RelationManager::deleteTable(const std::string &tableName) {
-        if(isSystemTable(tableName)) { return -1;} //cout<<"Fail to delete the system table"<<endl;
+//        if(isSystemTable(tableName)) { return -1;} //cout<<"Fail to delete the system table"<<endl;
         if(!rbfm.isFileExisting(tableName)) {
             return -1; //table does not exist
         }
