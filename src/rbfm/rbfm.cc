@@ -737,10 +737,10 @@ namespace PeterDB {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         RC readPage_res, read_res = -1;
         // todo: pagenum slot num = 0?
-        if (rid.slotNum > PAGE_SIZE / (2 * INT_FIELD_LEN) || rid.pageNum >= iteratorHandle.getNumberOfPages()) {
-            rid.slotNum = 0;
-            rid.pageNum = 0;
-        }
+//        if (rid.slotNum > PAGE_SIZE / (2 * INT_FIELD_LEN) || rid.pageNum >= iteratorHandle.getNumberOfPages()) {
+//            rid.slotNum = 0;
+//            rid.pageNum = 0;
+//        }
         char tempData[PAGE_SIZE];
         if (isIteratorNew) {
             rid.slotNum = 0;
