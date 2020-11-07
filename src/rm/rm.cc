@@ -425,7 +425,7 @@ namespace PeterDB {
     int RelationManager::getTableIdUsingTableName(const string tableName) {
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
-        int tableId;
+        int tableId = -1;
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
         rbfm.openFile(TABLE_CATALOG_FILE, fileHandle_table);
         vector<string> attributeName_tableid;
