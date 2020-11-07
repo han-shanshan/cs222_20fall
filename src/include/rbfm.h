@@ -77,13 +77,8 @@ namespace PeterDB {
         char filterValue[PAGE_SIZE];
 //        void *filterValue = malloc(PAGE_SIZE);
         std::vector<std::string> attributeNames;
-//    RID currentRid;
         bool isIteratorNew; //用于判断是否需要从0， 0开始读
 
-//        char pageData[PAGE_SIZE];
-//        char tempData[PAGE_SIZE];
-//        char notFilteredData[PAGE_SIZE];
-//    RecordBasedFileManager &rbfm;
         bool isDescriptorRequired(const std::vector<std::string> &attributeNames, const std::string &name) const;
 
 //    bool getIsRecordSatisfied(const RID &rid, RecordBasedFileManager &rbfm, void *attrDataToFilter, FileHandle handle) const;
