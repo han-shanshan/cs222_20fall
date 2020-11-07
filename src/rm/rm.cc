@@ -442,9 +442,9 @@ int tableId = 0;
         RID tableIdRid;
         tableIdRid.pageNum = 0;
         tableIdRid.slotNum = 0;
-//        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-//            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
-//        }
+        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
+            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
+        }
         tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) {return -1;}
