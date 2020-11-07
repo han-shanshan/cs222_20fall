@@ -36,7 +36,7 @@ namespace PeterDBTesting {
 
         }
 
-        for (int i = 1; i < 2; i++) {
+        for (int i = 1; i < 5; i++) {
             tableName = "rm_test_table_" + std::to_string(i);
             // Delete the table
             ASSERT_EQ(rm.deleteTable(tableName), success) << "Delete table " << tableName << " should succeed.";

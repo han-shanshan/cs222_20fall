@@ -364,9 +364,10 @@ namespace PeterDB {
             return -1; //table does not exist
         }
         RBFM_ScanIterator tableIterator, columnIterator;
-        int tableId = 3;//getTableIdUsingTableName(tableName);
+        int tableId = getTableIdUsingTableName(tableName);
         if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
-        rbfm.destroyFile(tableName);
+        int rc = rbfm.destroyFile(tableName);
+        if (rc != 0) return -1;
         RID tableRid, columnRid;
         tableRid.pageNum = 0;
         tableRid.slotNum = 0;
@@ -387,8 +388,8 @@ namespace PeterDB {
 
         if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
 //        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
-            rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
-//            memset(tempData, 0, PAGE_SIZE);
+            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
+            if(res != 0) {return -1; }
         }
         tableIterator.close();
         rbfm.closeFile(fileHandle_table);
@@ -404,8 +405,8 @@ namespace PeterDB {
 
         while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
 //            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
-            rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
-            memset(tempData, 0, PAGE_SIZE);
+            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
+            if(res != 0) {return -1;}
         }
         columnIterator.close();
         rbfm.closeFile(fileHandle_column);
