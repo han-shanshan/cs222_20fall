@@ -302,8 +302,7 @@ namespace PeterDB {
         char oldPageData[PAGE_SIZE];
         fileHandle.readPage(rid.pageNum, oldPageData);
         int slotTableLen = getSlotTableLength(oldPageData);
-        if (slotTableLen <=
-            0) { return -1; }//cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
+        if (slotTableLen <= 0) { return -1; }//cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
         int offset = 0, length = 0;
         getOffsetAndLengthUsingSlotNum(rid.slotNum, oldPageData, slotTableLen, offset,
                                        length); // get the offset and the length of the deleted slot
@@ -312,10 +311,8 @@ namespace PeterDB {
 //      length: -slot id - 1. //avoid slot id = 0
 //      old page: offset < 0, length < 0: direct to other page
 //      directed page: offset >= 0, length < 0: the record is an updated record from other page, so no need to count for this page
-        if (offset >= 0 && length <
-                           0) { length = -length; }  //cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
-        if (offset == 0 &&
-            length == 0) { return -1; }  //cout << "Fail to delete: the record has already been deleted" << endl;
+        if (offset >= 0 && length < 0) { length = -length; }  //cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
+        if (offset == 0 && length == 0) { return -1; }  //cout << "Fail to delete: the record has already been deleted" << endl;
         char newPageData[PAGE_SIZE];
 //      delete the record
         if (offset >= 0 && length > 0) {//record in the current page
@@ -761,7 +758,6 @@ namespace PeterDB {
         }
 
         char pageData[PAGE_SIZE];
-
         while ((rid.pageNum < iteratorHandle.getNumberOfPages())) {
 //        cout<<"iteratorHandle.getNumberOfPages = "<<iteratorHandle.getNumberOfPages();
             readPage_res = iteratorHandle.readPage(rid.pageNum, pageData);
@@ -786,7 +782,7 @@ namespace PeterDB {
     }
 
 
-    int RBFM_ScanIterator::getTheCurrentData(RID ri2d, void *data) {
+    int RBFM_ScanIterator::getTheCurrentData(RID rid, void *data) {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         if (rid.pageNum >= iteratorHandle.getNumberOfPages()) {
             return -1;
