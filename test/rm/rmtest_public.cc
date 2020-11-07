@@ -623,7 +623,7 @@ namespace PeterDBTesting {
         // Functions Tested for large tables
         // 1. scan
 
-        destroyFile = true;   // To clean up after test.
+//        destroyFile = true;   // To clean up after test.
 
         std::vector<std::string> attrs{
                 "attr29", "attr15", "attr25"
