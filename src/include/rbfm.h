@@ -209,8 +209,8 @@ namespace PeterDB {
 
         RC setLenToNegLenInDirectedPage(FileHandle &fileHandle, const RID &directedPageRid);
 
-        void formDataPageAfterUpdateOrDelete(void *newPageData, void *pageData,
-                const void *data, int slotTableLen, int offset, int length, int newSlotLength);
+//        void formDataPageAfterUpdateOrDelete(void *newPageData, void *pageData,
+//                const void *data, int slotTableLen, int offset, int length, int newSlotLength);
 
         bool isAttrFound(const std::string &filterAttributeName, int i_recordDescriptorCounter,
                          const std::vector<Attribute> &recordDescriptor) const;
@@ -221,28 +221,8 @@ namespace PeterDB {
 
         int getLastInteger(void *pageData, int index);
 
-//        void
-//        getOffAndLengWithSlotNumInSlotTable(const int slotNum, const void *slotTable, int &offset, int &length) const;
-
         int getFreeSpc(void *pageData);
-//        int getFreeSpc(void *pageData, int slotTableLen);
-
-
-
-//        void updateSlotTableWithSlotNum(void *slotTable, int slotNum, int slotLength, int offset4NewRecord) const;
-
-//        void updateFreeSpc(void *newPageData, int freeSpc) const;
-//
-//        void updateLastInteger(void *newPageData, int val, int index) const;
-//
-//        void updateSlotTableLen(void *newPageData, int slotTableLen) const;
         void updateLastInteger(void *newPageData, int val, int idx);
-
-//        void formDataPageAfterDelete_SlotTableNotUpdated(void *pageData, int slotTableLen, int offset, int length,
-//                                                         const void *newPageData);
-
-//        int getFreeSpc(char *pageData, int slotTableLen);
-
         void
         formDataPageAfterUpdate(char *newPageData, const char *pageData, const void *data,
                                 int slotTableLen,

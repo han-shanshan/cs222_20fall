@@ -568,19 +568,19 @@ namespace PeterDB {
     }
 
 
-    void RecordBasedFileManager::formDataPageAfterUpdateOrDelete(void *newPageData, void *pageData,
-                                                                 const void *data, int slotTableLen, int offset,
-                                                                 int length, int newSlotLength) {
-        int freeSpc = getFreeSpc(pageData);
-        if (length < 0) { length = -length; }
-        memcpy((char *) newPageData, pageData, offset);
-        memcpy((char *) newPageData + offset, data, newSlotLength);
-        int latterRecords = PAGE_SIZE - slotTableLen - 2 * INT_FIELD_LEN - freeSpc - offset - length;
-        memcpy((char *) newPageData + offset + newSlotLength, (char *) pageData + offset + length, latterRecords);
-//    add free space
-        freeSpc += (length - newSlotLength);
-        memcpy((char *) newPageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), &freeSpc, sizeof(int));
-    }
+//    void RecordBasedFileManager::formDataPageAfterUpdateOrDelete(void *newPageData, void *pageData,
+//                                                                 const void *data, int slotTableLen, int offset,
+//                                                                 int length, int newSlotLength) {
+//        int freeSpc = getFreeSpc(pageData);
+//        if (length < 0) { length = -length; }
+//        memcpy((char *) newPageData, pageData, offset);
+//        memcpy((char *) newPageData + offset, data, newSlotLength);
+//        int latterRecords = PAGE_SIZE - slotTableLen - 2 * INT_FIELD_LEN - freeSpc - offset - length;
+//        memcpy((char *) newPageData + offset + newSlotLength, (char *) pageData + offset + length, latterRecords);
+////    add free space
+//        freeSpc += (length - newSlotLength);
+//        memcpy((char *) newPageData + PAGE_SIZE - slotTableLen - 2 - sizeof(int), &freeSpc, sizeof(int));
+//    }
 
     void RecordBasedFileManager::formDataPageAfterUpdate(char *newPageData, const char *pageData,
                                                          const void *data, int slotTableLen, int offset, int length,
