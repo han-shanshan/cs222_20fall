@@ -365,7 +365,6 @@ namespace PeterDB {
         }
         RBFM_ScanIterator tableIterator, columnIterator;
         int tableId = getTableIdUsingTableName(tableName);
-        tableId = 0;
         if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
@@ -382,44 +381,44 @@ namespace PeterDB {
         rbfm.openFile(table_catalog_file, fileHandle_table);
         char filterValue[PAGE_SIZE];
         char tempData[PAGE_SIZE];
-//        memcpy(filterValue, &tableId, sizeof(int));
-        ////////////////////////////////////delete records in Tables table
-//        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
-//                  EQ_OP, filterValue, attributeNames2, tableIterator);
+        memcpy(filterValue, &tableId, sizeof(int));
+        //////////////////////////////////delete records in Tables table
+        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
+                  EQ_OP, filterValue, attributeNames2, tableIterator);
 
-//        if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
-////        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
-////            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
-////            if(res != 0) {return -1; }
-//        }
-//        tableIterator.close();
+        if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
+//        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
+//            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
+//            if(res != 0) {return -1; }
+        }
+        tableIterator.close();
         rbfm.closeFile(fileHandle_table);
-//
-//        /////////////////////////////////delete records in Columns table
-//        FileHandle fileHandle_column;
-//        string column_catalog_file = COLUMN_CATALOG_FILE;
-//        rbfm.openFile(column_catalog_file, fileHandle_column);
-//        //filterValue is also tableId
-//        rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
-//                  EQ_OP, filterValue, attributeNames2, columnIterator);
-////        memset(columnIterator.tempData, 0, PAGE_SIZE);
-//
-//        while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
-////            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
-//            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
-//            if(res != 0) {return -1;}
+
+        /////////////////////////////////delete records in Columns table
+        FileHandle fileHandle_column;
+        string column_catalog_file = COLUMN_CATALOG_FILE;
+        rbfm.openFile(column_catalog_file, fileHandle_column);
+        //filterValue is also tableId
+        rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
+                  EQ_OP, filterValue, attributeNames2, columnIterator);
+//        memset(columnIterator.tempData, 0, PAGE_SIZE);
+
+        while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
+//            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
+            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
+            if(res != 0) {return -1;}
+        }
+        columnIterator.close();
+        rbfm.closeFile(fileHandle_column);
+//        vector<Attribute> attrs;
+        // todo:
+//        this->getAttributes(tableName, attrs);
+//        for(int i = 0; i < attrs.size(); i++) {
+//            string indexFileName = getIndexFileName(tableName, attrs[i].name);
+//            if(isTableAlreadyExisted(indexFileName)) {
+//                rbfm.destroyFile(indexFileName);
+//            }
 //        }
-//        columnIterator.close();
-//        rbfm.closeFile(fileHandle_column);
-////        vector<Attribute> attrs;
-//        // todo:
-////        this->getAttributes(tableName, attrs);
-////        for(int i = 0; i < attrs.size(); i++) {
-////            string indexFileName = getIndexFileName(tableName, attrs[i].name);
-////            if(isTableAlreadyExisted(indexFileName)) {
-////                rbfm.destroyFile(indexFileName);
-////            }
-////        }
         return 0;
     }
 
@@ -443,12 +442,10 @@ namespace PeterDB {
         tableIdRid.pageNum = 0;
         tableIdRid.slotNum = 0;
         if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-//            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
             memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
-//              tableId = *(int*)&tempData;
         }
         free(tempData);
-//        tableIdIterator.close();
+        tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) return -1;
         return tableId;
