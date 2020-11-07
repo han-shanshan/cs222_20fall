@@ -438,14 +438,16 @@ namespace PeterDB {
         memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
         rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
                   EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
-        char tempData[PAGE_SIZE];
+        void* tempData=malloc(100);
         RID tableIdRid;
         tableIdRid.pageNum = 0;
         tableIdRid.slotNum = 0;
         if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
+//            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
             memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
+//              tableId = *(int*)&tempData;
         }
+        free(tempData);
         tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) return -1;
