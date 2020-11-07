@@ -698,7 +698,7 @@ namespace PeterDB {
                                     RBFM_ScanIterator &rbfm_ScanIterator) {
         //    Attribute conditionAttributeAttr;
         rbfm_ScanIterator.isIteratorNew = true;
-        int aa = conditionAttribute.length();
+//        int aa = conditionAttribute.length();
         if (conditionAttribute.length() == 0 || compOp == NO_OP) {
             rbfm_ScanIterator.conditionAttributeAttr.length = -1;
             rbfm_ScanIterator.conditionAttributeAttr.name = "";
@@ -709,26 +709,26 @@ namespace PeterDB {
                 }
             }
         }
-        for (int i = 0; i < recordDescriptor.size(); i++) {
-            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
-                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
-            }
-        }
-
-        rbfm_ScanIterator.iteratorHandle = fileHandle;
-        rbfm_ScanIterator.attributeNames = attributeNames;
-        rbfm_ScanIterator.recordDescriptor = recordDescriptor;
-        rbfm_ScanIterator.compOp = compOp;
-        if (compOp != NO_OP) {
-            if (rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar) {
-                int varcharLen = 0;
-//                cout<<"value:"<<value<<endl;
-                memcpy(&varcharLen, value, sizeof(int));
-                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int) + varcharLen);
-            } else {
-                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int));
-            }
-        }
+//        for (int i = 0; i < recordDescriptor.size(); i++) {
+//            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
+//                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
+//            }
+//        }
+//
+//        rbfm_ScanIterator.iteratorHandle = fileHandle;
+//        rbfm_ScanIterator.attributeNames = attributeNames;
+//        rbfm_ScanIterator.recordDescriptor = recordDescriptor;
+//        rbfm_ScanIterator.compOp = compOp;
+//        if (compOp != NO_OP) {
+//            if (rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar) {
+//                int varcharLen = 0;
+////                cout<<"value:"<<value<<endl;
+//                memcpy(&varcharLen, value, sizeof(int));
+//                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int) + varcharLen);
+//            } else {
+//                memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int));
+//            }
+//        }
 
         return 0;
     }
