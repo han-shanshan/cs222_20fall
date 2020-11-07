@@ -448,7 +448,7 @@ namespace PeterDB {
 ////              tableId = *(int*)&tempData;
 //        }
         free(tempData);
-        tableIdIterator.close();
+//        tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) return -1;
         return tableId;
