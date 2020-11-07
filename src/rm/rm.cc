@@ -364,8 +364,8 @@ namespace PeterDB {
             return -1; //table does not exist
         }
         RBFM_ScanIterator tableIterator, columnIterator;
-//        int tableId = getTableIdUsingTableName(tableName);
-//        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
+        int tableId = getTableIdUsingTableName(tableName);
+        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
         RID tableRid, columnRid;
@@ -392,7 +392,7 @@ namespace PeterDB {
 //            if(res != 0) {return -1; }
 //        }
 //        tableIterator.close();
-//        rbfm.closeFile(fileHandle_table);
+        rbfm.closeFile(fileHandle_table);
 //
 //        /////////////////////////////////delete records in Columns table
 //        FileHandle fileHandle_column;
@@ -423,7 +423,6 @@ namespace PeterDB {
     }
 
     int RelationManager::getTableIdUsingTableName(const string tableName) {
-
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
         int tableId;
@@ -432,7 +431,7 @@ namespace PeterDB {
         rbfm.openFile(table_file, fileHandle_table);
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
-////////////////////////////////////delete records in Tables table
+        //delete records in Tables table
         char filterValue[PAGE_SIZE]; // sizeof(int) + table name
         int tableNameLen = tableName.length();
         memcpy(filterValue, &tableNameLen, sizeof(int));
@@ -448,7 +447,8 @@ namespace PeterDB {
             memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
         }
         tableIdIterator.close();
-        rbfm.closeFile(fileHandle_table);
+        RC res = rbfm.closeFile(fileHandle_table);
+        if(res != 0) return -1;
         return tableId;
     }
 

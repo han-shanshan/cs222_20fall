@@ -59,6 +59,8 @@ namespace PeterDB {
         RBFM_ScanIterator() = default;;
 
         ~RBFM_ScanIterator() = default;;
+//        RecordBasedFileManager& rbfm();
+//        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
 
         // Never keep the results in the memory. When getNextRecord() is called,
         // a satisfying record needs to be fetched from the file.
@@ -85,7 +87,7 @@ namespace PeterDB {
 
 //    bool getIsRecordSatisfied(const RID &rid, RecordBasedFileManager &rbfm, void *attrDataToFilter, FileHandle handle) const;
 
-        bool getIsRecordSatisfied(const RID rid, RecordBasedFileManager &rbfm, FileHandle handle) const;
+        bool getIsRecordSatisfied(const RID rid, FileHandle handle) const;
 
         int getTheCurrentData(RID rid, void *data);
 

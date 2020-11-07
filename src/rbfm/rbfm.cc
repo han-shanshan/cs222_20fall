@@ -799,7 +799,7 @@ namespace PeterDB {
 
         //add filter. 如果没有通过filter则set read_res to -1
         int read_res = 0;
-        if (!this->getIsRecordSatisfied(rid, rbfm, iteratorHandle)) { read_res = -1; }
+        if (!this->getIsRecordSatisfied(rid, iteratorHandle)) { read_res = -1; }
         else {
             int fieldLen = 0;
             int encodedNotFilteredDataOffset = 0;
@@ -863,8 +863,9 @@ namespace PeterDB {
     }
 
 
-    bool RBFM_ScanIterator::getIsRecordSatisfied(const RID rid, RecordBasedFileManager &rbfm,
+    bool RBFM_ScanIterator::getIsRecordSatisfied(const RID rid,
                                                  FileHandle handle) const {
+        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         if (this->conditionAttributeAttr.length == -1 || this->compOp == NO_OP) {//no condition , no need to filter
             return true;
         }
