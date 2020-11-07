@@ -364,7 +364,7 @@ namespace PeterDB {
             return -1; //table does not exist
         }
         RBFM_ScanIterator tableIterator, columnIterator;
-        int tableId = getTableIdUsingTableName(tableName);
+        int tableId = 3;//getTableIdUsingTableName(tableName);
         if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         rbfm.destroyFile(tableName);
         RID tableRid, columnRid;
