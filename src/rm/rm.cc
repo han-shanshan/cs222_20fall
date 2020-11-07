@@ -435,16 +435,16 @@ namespace PeterDB {
         int tableNameLen = tableName.length();
         memcpy(filterValue, &tableNameLen, sizeof(int));
         memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
-        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
-                  EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
-        char tempData[PAGE_SIZE];
-        RID tableIdRid;
-        tableIdRid.pageNum = 0;
-        tableIdRid.slotNum = 0;
-        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
-            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
-        }
+//        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
+//                  EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
+//        char tempData[PAGE_SIZE];
+//        RID tableIdRid;
+//        tableIdRid.pageNum = 0;
+//        tableIdRid.slotNum = 0;
+//        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
+//            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
+//            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
+//        }
         tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) return -1;
