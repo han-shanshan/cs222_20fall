@@ -127,7 +127,7 @@ namespace PeterDB {
                                    const CompOp compOp, const void *filterValue, const std::string &fileName,
                                    std::vector<Attribute> recordDescriptors);
 
-        int getTableIdUsingTableName(const std::string tableName);
+        int getTableIdUsingTableName(std::string tableName);
 
         RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
 

@@ -1,6 +1,6 @@
 #include "src/include/rm.h"
 #include "cmath"
-#include <string.h>
+#include <cstring>
 #include <string>
 #include<iostream>
 #include <cstring>
@@ -141,7 +141,7 @@ namespace PeterDB {
     bool RelationManager::isSystemTable(const string &tableName){
         if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0) {return true;}
         if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0) {return true;}
-        if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE) == 0) {return true;}
+//        if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE) == 0) {return true;}
         return false;
     }
 
@@ -383,16 +383,16 @@ namespace PeterDB {
         char tempData[PAGE_SIZE];
         memcpy(filterValue, &tableId, sizeof(int));
         //////////////////////////////////delete records in Tables table
-        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
-                  EQ_OP, filterValue, attributeNames2, tableIterator);
-
-        if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
-//        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
-            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
-            if(res != 0) {return -1; }
-        }
-        tableIterator.close();
-        rbfm.closeFile(fileHandle_table);
+//        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
+//                  EQ_OP, filterValue, attributeNames2, tableIterator);
+//
+//        if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
+////        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
+//            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
+//            if(res != 0) {return -1; }
+//        }
+//        tableIterator.close();
+//        rbfm.closeFile(fileHandle_table);
 
         /////////////////////////////////delete records in Columns table
 //        FileHandle fileHandle_column;
@@ -422,7 +422,7 @@ namespace PeterDB {
         return 0;
     }
 
-    int RelationManager::getTableIdUsingTableName(const string tableName) {
+    int RelationManager::getTableIdUsingTableName(string tableName) {
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
         int tableId = -1;
@@ -496,7 +496,7 @@ namespace PeterDB {
         int columnType = 0;
         int columnLen = 0, columnPosition = 0;
         int offset = 0;
-        AttrType type;
+        AttrType type = TypeInt;
         char encodedFilteredData[PAGE_SIZE];
         char tempData[PAGE_SIZE];
         char recordData[PAGE_SIZE];
@@ -513,8 +513,8 @@ namespace PeterDB {
             memcpy(&columnType, (char*)tempData + offset, sizeof(int));
             offset += sizeof(int);
             offset += sizeof(int);
-            if(columnType == 0){type = TypeInt; }
-            else if(columnType == 1){type = TypeReal; }
+//            if(columnType == 0){type = TypeInt; }
+            if(columnType == 1){type = TypeReal; }
             else if(columnType == 2){type = TypeVarChar; }
             memcpy(&columnLen, (char*)tempData + offset, sizeof(int));
             offset += sizeof(int);
