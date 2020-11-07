@@ -423,7 +423,7 @@ namespace PeterDB {
     }
 
     int RelationManager::getTableIdUsingTableName(const string tableName) {
-        RID tableIdRid;
+
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
         int tableId;
@@ -440,7 +440,9 @@ namespace PeterDB {
         rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
                   EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
         char tempData[PAGE_SIZE];
-
+        RID tableIdRid;
+        tableIdRid.pageNum = 0;
+        tableIdRid.slotNum = 0;
         if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
             rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
             memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
