@@ -297,7 +297,7 @@ namespace PeterDBTesting {
         // Note that the left-most bit represents the first field. Thus, the offset is 7 from right, not 0.
         // e.g., if a tuple consists of four attributes and they are all nulls, then the bit representation will be: [11110000]
 
-        // Is the name field not-NULL?
+        // Is the fileName field not-NULL?
         nullBit = nullAttributesIndicator[0] & ((unsigned) 1 << (unsigned) 7);
 
         if (!nullBit) {
@@ -354,7 +354,7 @@ namespace PeterDBTesting {
         // Note that the left-most bit represents the first field. Thus, the offset is 7 from right, not 0.
         // e.g., if a tuple consists of four attributes and they are all nulls, then the bit representation will be: [11110000]
 
-        // Is the name field not-NULL?
+        // Is the fileName field not-NULL?
         nullBit = nullAttributesIndicator[0] & ((unsigned) 1 << (unsigned) 7);
 
         if (!nullBit) {

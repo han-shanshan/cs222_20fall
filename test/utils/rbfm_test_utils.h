@@ -54,7 +54,7 @@ namespace PeterDBTesting {
 
                     PeterDB::Attribute attr;
                     while (tokenizer != NULL) {
-                        // get name if there is
+                        // get fileName if there is
                         tokenizer = strtok(NULL, delimiters.c_str());
                         if (tokenizer == NULL) {
                             break;
@@ -270,7 +270,7 @@ namespace PeterDBTesting {
             // Note that the left-most bit represents the first field. Thus, the offset is 7 from right, not 0.
             // e.g., if a record consists of four fields and they are all nulls, then the bit representation will be: [11110000]
 
-            // Is the name field not-NULL?
+            // Is the fileName field not-NULL?
             nullBit = nullFieldsIndicator[0] & ((unsigned) 1 << (unsigned) 7);
 
             if (!nullBit) {

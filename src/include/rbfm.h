@@ -22,7 +22,7 @@ namespace PeterDB {
     typedef unsigned AttrLength;
 
     typedef struct Attribute {
-        std::string name;  // attribute name
+        std::string name;  // attribute fileName
         AttrType type;     // attribute type
         AttrLength length; // attribute length
     } Attribute;
@@ -127,7 +127,7 @@ namespace PeterDB {
         // Print the record that is passed to this utility method.
         // This method will be mainly used for debugging/testing.
         // The format is as follows:
-        // field1-name: field1-value  field2-name: field2-value ... \n
+        // field1-fileName: field1-value  field2-fileName: field2-value ... \n
         // (e.g., age: 24  height: 6.1  salary: 9000
         //        age: NULL  height: 7.5  salary: 7500)
         RC printRecord(const std::vector<Attribute> &recordDescriptor, const void *data, std::ostream &out);
@@ -143,7 +143,7 @@ namespace PeterDB {
         RC updateRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor, const void *data,
                         const RID &rid);
 
-        // Read an attribute given its name and the rid.
+        // Read an attribute given its fileName and the rid.
         RC readAttribute(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor, const RID &rid,
                          const std::string &attributeName, void *data);
 

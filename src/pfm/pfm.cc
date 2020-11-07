@@ -41,6 +41,7 @@ namespace PeterDB {
         if (fileHandle.file) { return -1; } //this fileHandle has already been used;
         //PagedFileManager failed to open the file: this file does not exist.
         if (!(fileHandle.file = fopen(fileName.c_str(), "rb+"))) { return -1; }
+        fileHandle.fileName = fileName;
         //rwa
         fseek(fileHandle.file, 0, SEEK_SET);
         fread(&fileHandle.readPageCounter, INT_FIELD_LEN, 1, fileHandle.file);

@@ -47,6 +47,7 @@ namespace PeterDB {
         unsigned writePageCounter;
         unsigned appendPageCounter;
         FILE *file;
+        std::string fileName;
 
         FileHandle();                                                       // Default constructor
         ~FileHandle();                                                      // Destructor

@@ -42,9 +42,9 @@
 - Show your page format design.
 
   1) PagedFileManager class: handle the file creation, deletion, opening, and closing.
-      - RC createFile (const string &fileName): create an empty file with a name of fileName.
-      - RC destroyFile (const string &fileName): destroys the paged file whose name is fileName.
-      - RC openFile (const string &fileName, FileHandle &fileHandle): open the paged file with a name of fileName, and pass
+      - RC createFile (const string &fileName): create an empty file with a fileName of fileName.
+      - RC destroyFile (const string &fileName): destroys the paged file whose fileName is fileName.
+      - RC openFile (const string &fileName, FileHandle &fileHandle): open the paged file with a fileName of fileName, and pass
             the fileHandle for the current file.
       - RC closeFile (FileHandle &fileHandle): close the open file instance referred to by fileHandle.
 
@@ -84,8 +84,8 @@ readPageCounter(4 bytes) writePageCount(4 bytes) appendPageCount(4 bytes)
 
     1) This system use RecordBasedFileManager to handle record-based operations such as inserting, updating, deleting, and reading records.
       - RC createFile(const string &fileName): create a record-based file called fileName.
-      - RC destroyFile(const string &fileName): destroy the record-based file whose name is fileName.
-      - RC openFile(const string &fileName, FileHandle &fileHandle): open the record-based file whose name is fileName.
+      - RC destroyFile(const string &fileName): destroy the record-based file whose fileName is fileName.
+      - RC openFile(const string &fileName, FileHandle &fileHandle): open the record-based file whose fileName is fileName.
       - RC closeFile(FileHandle &fileHandle): closeS the open file instance referred to by fileHandle.
       - RC insertRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const void *data, RID &rid):insert
             a new record into the file according to the record descriptor. When inserting a record, firstly whether the

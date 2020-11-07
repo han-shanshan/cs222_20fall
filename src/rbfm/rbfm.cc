@@ -713,7 +713,7 @@ namespace PeterDB {
                 rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
             }
         }
-
+        this->openFile(fileHandle.fileName, rbfm_ScanIterator.iteratorHandle);
 //        rbfm_ScanIterator.iteratorHandle = fileHandle;
         rbfm_ScanIterator.attributeNames = attributeNames;
         rbfm_ScanIterator.recordDescriptor = recordDescriptor;

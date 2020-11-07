@@ -27,8 +27,8 @@ namespace PeterDB {
         if(rbfm.isFileExisting(COLUMN_CATALOG_FILE)){rbfm.destroyFile(COLUMN_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
 //        if(rbfm.isFileExisting(INDEX_CATALOG_FILE)){rbfm.destroyFile(INDEX_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
 
-        //Tables (table-id:int, table-name:varchar(50), file-name:varchar(50))
-        //Columns(table-id:int, column-name:varchar(50), column-type:int, column-length:int, column-position:int)
+        //Tables (table-id:int, table-fileName:varchar(50), file-fileName:varchar(50))
+        //Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
         if(createTable(TABLE_CATALOG_FILE, getTablesTableDescriptor()) == 0
            && createTable(COLUMN_CATALOG_FILE, getColumnsTableDescriptor()) == 0
 //           && createSystemTable(INDEXES_TABLE_NAME, getIndexesTableDescriptor()) == 0
@@ -40,7 +40,7 @@ namespace PeterDB {
     vector<Attribute> RelationManager::getColumnsTableDescriptor() {
         vector<Attribute> columnAttrs;
         columnAttrs.push_back(attribute("table-id", TypeInt, 4));
-        columnAttrs.push_back(attribute("column-name", TypeVarChar, 50));
+        columnAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
         columnAttrs.push_back(attribute("column-type", TypeInt, 4));
         columnAttrs.push_back(attribute("column-length", TypeInt, 4));
         columnAttrs.push_back(attribute("column-position", TypeInt, 4));
@@ -50,17 +50,17 @@ namespace PeterDB {
     vector<Attribute> RelationManager::getTablesTableDescriptor() {
         vector<Attribute> tableAttrs;
         tableAttrs.push_back(attribute("table-id", TypeInt, 4));
-        tableAttrs.push_back(attribute("table-name", TypeVarChar, 50));
-        tableAttrs.push_back(attribute("file-name", TypeVarChar, 50));
+        tableAttrs.push_back(attribute("table-fileName", TypeVarChar, 50));
+        tableAttrs.push_back(attribute("file-fileName", TypeVarChar, 50));
         return tableAttrs;
     }
 
     vector<Attribute> RelationManager::getIndexesTableDescriptor() {
         vector<Attribute> indexAttrs;
         indexAttrs.push_back(attribute("table-id", TypeInt, 4));
-        indexAttrs.push_back(attribute("table-name", TypeVarChar, 50));
+        indexAttrs.push_back(attribute("table-fileName", TypeVarChar, 50));
         indexAttrs.push_back(attribute("column-pos", TypeInt, 4));
-        indexAttrs.push_back(attribute("column-name", TypeVarChar, 50));
+        indexAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
         return indexAttrs;
     }
 
@@ -83,7 +83,7 @@ namespace PeterDB {
 
         RBFM_ScanIterator iterator;
         vector<std::string> attributeNames;
-        attributeNames.push_back("table-name");
+        attributeNames.push_back("table-fileName");
         RID rid;
         rid.pageNum = 0;
         rid.slotNum = 0;
@@ -168,7 +168,7 @@ namespace PeterDB {
         memset(nullsIndicator, 0, 1);//00000000
         char buffer[PAGE_SIZE];
 
-        //prepare the table buffer. Tables (table-id:int, table-name:varchar(50), file-name:varchar(50))
+        //prepare the table buffer. Tables (table-id:int, table-fileName:varchar(50), file-fileName:varchar(50))
         prepareDecodedRecord(nullsIndicator, tablesTableDescriptor, tableAttrValues, buffer);
 //    cout<<"insert: ";
 //        std::stringstream stream;
@@ -181,9 +181,9 @@ namespace PeterDB {
         rbfm.closeFile(tablCatalogFH);
 
         /* ******** insert into the catolog-column file ******** */
-        //Columns(table-id:int, column-name:varchar(50), column-type:int, column-length:int, column-position:int)
+        //Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
         //(1, "table-id", TypeInt, 4 , 1)
-        //    attr.name = "Salary";
+        //    attr.fileName = "Salary";
         //    attr.type = TypeInt;
         //    attr.length = (AttrLength) 4;
         FileHandle colCatalogFH;
@@ -431,11 +431,11 @@ int tableId = 0;
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
         //delete records in Tables table
-        char filterValue[PAGE_SIZE]; // sizeof(int) + table name
+        char filterValue[PAGE_SIZE]; // sizeof(int) + table fileName
         int tableNameLen = tableName.length();
         memcpy(filterValue, &tableNameLen, sizeof(int));
         memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
-        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
+        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-fileName",
                   EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
 
         char tempData[PAGE_SIZE];
@@ -464,12 +464,12 @@ int tableId = 0;
 
         FileHandle fileHandle;
         rbfm.openFile(COLUMN_CATALOG_FILE, fileHandle);
-//    cout<<"table name = "<<tableName<<endl;
+//    cout<<"table fileName = "<<tableName<<endl;
         char columnPositions4RecordDescriptors[PAGE_SIZE];
         int columnPositions4RecordDescriptors_offset = 0;
         int tableId = getTableIdUsingTableName(tableName);
 //    cout<<"table id = "<<tableId<<endl;
-//    Columns(table-id:int, column-name:varchar(50), column-type:int, column-length:int, column-position:int)
+//    Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
 
         RBFM_ScanIterator iterator;
         vector<Attribute> columnRecordDescriptors = getColumnsTableDescriptor();
