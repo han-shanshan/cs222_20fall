@@ -393,32 +393,32 @@ namespace PeterDB {
         }
         tableIterator.close();
         rbfm.closeFile(fileHandle_table);
-
-        /////////////////////////////////delete records in Columns table
-        FileHandle fileHandle_column;
-        string column_catalog_file = COLUMN_CATALOG_FILE;
-        rbfm.openFile(column_catalog_file, fileHandle_column);
-        //filterValue is also tableId
-        rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
-                  EQ_OP, filterValue, attributeNames2, columnIterator);
-//        memset(columnIterator.tempData, 0, PAGE_SIZE);
-
-        while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
-//            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
-            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
-            if(res != 0) {return -1;}
-        }
-        columnIterator.close();
-        rbfm.closeFile(fileHandle_column);
-//        vector<Attribute> attrs;
-        // todo:
-//        this->getAttributes(tableName, attrs);
-//        for(int i = 0; i < attrs.size(); i++) {
-//            string indexFileName = getIndexFileName(tableName, attrs[i].name);
-//            if(isTableAlreadyExisted(indexFileName)) {
-//                rbfm.destroyFile(indexFileName);
-//            }
+//
+//        /////////////////////////////////delete records in Columns table
+//        FileHandle fileHandle_column;
+//        string column_catalog_file = COLUMN_CATALOG_FILE;
+//        rbfm.openFile(column_catalog_file, fileHandle_column);
+//        //filterValue is also tableId
+//        rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
+//                  EQ_OP, filterValue, attributeNames2, columnIterator);
+////        memset(columnIterator.tempData, 0, PAGE_SIZE);
+//
+//        while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
+////            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
+//            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
+//            if(res != 0) {return -1;}
 //        }
+//        columnIterator.close();
+//        rbfm.closeFile(fileHandle_column);
+////        vector<Attribute> attrs;
+//        // todo:
+////        this->getAttributes(tableName, attrs);
+////        for(int i = 0; i < attrs.size(); i++) {
+////            string indexFileName = getIndexFileName(tableName, attrs[i].name);
+////            if(isTableAlreadyExisted(indexFileName)) {
+////                rbfm.destroyFile(indexFileName);
+////            }
+////        }
         return 0;
     }
 
