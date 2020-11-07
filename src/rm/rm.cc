@@ -431,10 +431,10 @@ namespace PeterDB {
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
         //delete records in Tables table
-        char filterValue[PAGE_SIZE]; // sizeof(int) + table name
-        int tableNameLen = tableName.length();
-        memcpy(filterValue, &tableNameLen, sizeof(int));
-        memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
+//        char filterValue[PAGE_SIZE]; // sizeof(int) + table name
+//        int tableNameLen = tableName.length();
+//        memcpy(filterValue, &tableNameLen, sizeof(int));
+//        memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
 //        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
 //                  EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
 //        char tempData[PAGE_SIZE];
@@ -445,7 +445,7 @@ namespace PeterDB {
 //            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
 //            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
 //        }
-        tableIdIterator.close();
+//        tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) return -1;
         return tableId;
