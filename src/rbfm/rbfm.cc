@@ -697,22 +697,22 @@ namespace PeterDB {
                                     const std::vector<std::string> &attributeNames,
                                     RBFM_ScanIterator &rbfm_ScanIterator) {
         //    Attribute conditionAttributeAttr;
-//        rbfm_ScanIterator.isIteratorNew = true;
-//        if (compOp == NO_OP) {
-//            rbfm_ScanIterator.conditionAttributeAttr.length = -1;
-//            rbfm_ScanIterator.conditionAttributeAttr.name = "";
-//        } else {
-//            for (int j = 0; j < recordDescriptor.size(); j++) {
-//                if (strcmp(conditionAttribute.c_str(), recordDescriptor[j].name.c_str()) == 0) {
-//                    rbfm_ScanIterator.conditionAttributeAttr = recordDescriptor[j];
-//                }
-//            }
-//        }
-//        for (int i = 0; i < recordDescriptor.size(); i++) {
-//            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
-//                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
-//            }
-//        }
+        rbfm_ScanIterator.isIteratorNew = true;
+        if (compOp == NO_OP) {
+            rbfm_ScanIterator.conditionAttributeAttr.length = -1;
+            rbfm_ScanIterator.conditionAttributeAttr.name = "";
+        } else {
+            for (int j = 0; j < recordDescriptor.size(); j++) {
+                if (strcmp(conditionAttribute.c_str(), recordDescriptor[j].name.c_str()) == 0) {
+                    rbfm_ScanIterator.conditionAttributeAttr = recordDescriptor[j];
+                }
+            }
+        }
+        for (int i = 0; i < recordDescriptor.size(); i++) {
+            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
+                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
+            }
+        }
 
 //        rbfm_ScanIterator.iteratorHandle = fileHandle;
 //        rbfm_ScanIterator.attributeNames = attributeNames;
