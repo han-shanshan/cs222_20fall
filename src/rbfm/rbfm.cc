@@ -966,6 +966,7 @@ namespace PeterDB {
         rbfm.closeFile(this->iteratorHandle);
         vector<Attribute>().swap(selectedRecordDescriptor);
         vector<Attribute>().swap(recordDescriptor);
+
         return 0;
     }
 

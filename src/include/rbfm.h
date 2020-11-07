@@ -74,7 +74,8 @@ namespace PeterDB {
         std::vector<Attribute> selectedRecordDescriptor;
         Attribute conditionAttributeAttr;
         CompOp compOp;
-        void *filterValue = malloc(PAGE_SIZE);
+        char filterValue[PAGE_SIZE];
+//        void *filterValue = malloc(PAGE_SIZE);
         std::vector<std::string> attributeNames;
 //    RID currentRid;
         bool isIteratorNew; //用于判断是否需要从0， 0开始读
