@@ -131,7 +131,7 @@ namespace PeterDB {
 
         RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
 
-        bool isTableInSystemTable(const std::string &tableName);
+        bool isSystemTable(const std::string &tableName);
 
         std::vector<Attribute> getIndexesTableDescriptor();
 

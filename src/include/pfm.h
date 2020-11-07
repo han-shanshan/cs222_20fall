@@ -30,7 +30,7 @@ namespace PeterDB {
         RC openFile(const std::string &fileName, FileHandle &fileHandle);   // Open a file
         RC closeFile(FileHandle &fileHandle);                               // Close a file
 
-        RC isFileExisting(const std::string &fileName) const;
+        bool isFileExisting(const std::string &fileName) const;
 
     protected:
         PagedFileManager();                                                 // Prevent construction

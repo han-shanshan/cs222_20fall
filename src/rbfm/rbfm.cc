@@ -36,7 +36,7 @@ namespace PeterDB {
         return 0;
     }
 
-    RC RecordBasedFileManager::isFileExisting(const string &fileName) {
+    bool RecordBasedFileManager::isFileExisting(const string &fileName) {
         return pfm.isFileExisting(fileName);
     }
 
@@ -50,7 +50,7 @@ namespace PeterDB {
         //rid: page num, slot num;
         char encodedData[PAGE_SIZE];
         int slotLength = encodeRecordData_returnSlotLength(recordDescriptor, data, encodedData);
-        if (fileHandle.file == NULL) { return -1; } //error;
+        if (fileHandle.file == nullptr) { return -1; } //error;
 //    cout<<"slotlength = "<<slotLength<<endl;
         int res = insertEncodedRecord(fileHandle, rid, encodedData, slotLength);
         if (res != 0) { return -1; }

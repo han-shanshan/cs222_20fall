@@ -119,7 +119,7 @@ namespace PeterDB {
 
 //
 //    RC RelationManager::createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
-//        if(!isTableInSystemTable(tableName)) {
+//        if(!isSystemTable(tableName)) {
 //            return -1;
 //        }
 ////        if(rbfm.isFileExisting(tableName)){
@@ -138,7 +138,7 @@ namespace PeterDB {
 //        return createTable(tableName, attrs);
 //    }
 
-    bool RelationManager::isTableInSystemTable(const string &tableName){
+    bool RelationManager::isSystemTable(const string &tableName){
         if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0) {return true;}
         if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0) {return true;}
         if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE) == 0) {return true;}
@@ -149,7 +149,7 @@ namespace PeterDB {
     RC RelationManager::createTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
         string tableFileName = TABLE_CATALOG_FILE;
         if((!rbfm.isFileExisting(tableFileName)) &&
-           !isTableInSystemTable(tableName)) {return -1;} // catalog file does not exist
+           !isSystemTable(tableName)) {return -1;} // catalog file does not exist
         if (rbfm.isFileExisting(tableName)) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
 
         //if this table already exists, return 1;
@@ -359,7 +359,7 @@ namespace PeterDB {
 
 
     RC RelationManager::deleteTable(const std::string &tableName) {
-        if(isTableInSystemTable(tableName)) { return -1;} //cout<<"Fail to delete the system table"<<endl;
+        if(isSystemTable(tableName)) { return -1;} //cout<<"Fail to delete the system table"<<endl;
         if(!rbfm.isFileExisting(tableName)) {
             return -1; //table does not exist
         }

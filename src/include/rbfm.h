@@ -161,7 +161,7 @@ namespace PeterDB {
 
         RC insertEncodedRecord(FileHandle &fileHandle, RID &rid, const void *encodedData, int slotLength);
 
-        RC isFileExisting(const string &fileName);
+        bool isFileExisting(const string &fileName);
         int getSlotTableLength(void *pageData);
         int decodeData(const vector <Attribute> &recordDescriptor, void *data, const void *encodedData);
 
