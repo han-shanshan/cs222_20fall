@@ -44,13 +44,13 @@ namespace PeterDBTesting {
         }
 
         // Delete the non-existence table
-//        tableName = "non_existence_table";
-//        ASSERT_NE(rm.deleteTable(tableName), success)
-//                                    << "Delete non-existence table " << tableName << " should not succeed.";
-//        ASSERT_FALSE(fileExists(tableName)) << "Table " << tableName << " file should not exist now.";
-//
-//        // Delete Catalog
-//        ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
+        tableName = "non_existence_table";
+        ASSERT_NE(rm.deleteTable(tableName), success)
+                                    << "Delete non-existence table " << tableName << " should not succeed.";
+        ASSERT_FALSE(fileExists(tableName)) << "Table " << tableName << " file should not exist now.";
+
+        // Delete Catalog
+        ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
 
     }
 
