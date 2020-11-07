@@ -177,7 +177,7 @@ namespace PeterDB {
         FileHandle tablCatalogFH;
         rbfm.openFile(tableFileName, tablCatalogFH);
 
-        rbfm.printRecord(tablesTableDescriptor, buffer, std::cout);
+//        rbfm.printRecord(tablesTableDescriptor, buffer, std::cout);
         rbfm.insertRecord(tablCatalogFH, tablesTableDescriptor, buffer, tableRid);
         rbfm.closeFile(tablCatalogFH);
 
@@ -208,7 +208,7 @@ namespace PeterDB {
             //prepare the column buffer
             memset(buffer, 0, PAGE_SIZE);
             prepareDecodedRecord(nullsIndicator, colTableDescriptor, columnAttrValues, buffer);
-            rbfm.printRecord(colTableDescriptor, buffer, std::cout);
+//            rbfm.printRecord(colTableDescriptor, buffer, std::cout);
             rbfm.insertRecord(colCatalogFH, colTableDescriptor, buffer, columnRid);
 //        this->printTuple(columnsTableDescriptor, buffer);
             vector <string>().swap(columnAttrValues);  //清除容器并最小化它的容量，
