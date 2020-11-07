@@ -364,8 +364,8 @@ namespace PeterDB {
             return -1; //table does not exist
         }
         RBFM_ScanIterator tableIterator, columnIterator;
-//        int tableId = getTableIdUsingTableName(tableName);
-//        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
+        int tableId = getTableIdUsingTableName(tableName);
+        if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
         RID tableRid, columnRid;
@@ -427,8 +427,7 @@ namespace PeterDB {
         RBFM_ScanIterator tableIdIterator;
         int tableId;
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
-        string table_file = TABLE_CATALOG_FILE;
-        rbfm.openFile(table_file, fileHandle_table);
+        rbfm.openFile(TABLE_CATALOG_FILE, fileHandle_table);
         vector<string> attributeName_tableid;
         attributeName_tableid.push_back("table-id");
         //delete records in Tables table
@@ -442,10 +441,10 @@ namespace PeterDB {
         RID tableIdRid;
         tableIdRid.pageNum = 0;
         tableIdRid.slotNum = 0;
-        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
-            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
-        }
+//        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
+//            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
+//            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
+//        }
         tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
         if(res != 0) return -1;
