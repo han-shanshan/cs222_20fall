@@ -699,7 +699,7 @@ namespace PeterDB {
         //    Attribute conditionAttributeAttr;
         rbfm_ScanIterator.isIteratorNew = true;
 //        int aa = conditionAttribute.length();
-        if (conditionAttribute.length() == 0 || compOp == NO_OP) {
+        if (compOp == NO_OP) {
             rbfm_ScanIterator.conditionAttributeAttr.length = -1;
             rbfm_ScanIterator.conditionAttributeAttr.name = "";
         } else {
