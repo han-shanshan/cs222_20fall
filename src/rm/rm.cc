@@ -442,11 +442,11 @@ namespace PeterDB {
         RID tableIdRid;
         tableIdRid.pageNum = 0;
         tableIdRid.slotNum = 0;
-        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
-//            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
-            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
-//              tableId = *(int*)&tempData;
-        }
+//        if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
+////            rbfm.readAttribute(tableIdIterator.iteratorHandle, recordDescriptor_table, tableIdRid, "table-id", tempData);
+//            memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
+////              tableId = *(int*)&tempData;
+//        }
         free(tempData);
         tableIdIterator.close();
         RC res = rbfm.closeFile(fileHandle_table);
