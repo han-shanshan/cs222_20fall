@@ -715,9 +715,9 @@ namespace PeterDB {
         }
 
 //        rbfm_ScanIterator.iteratorHandle = fileHandle;
-//        rbfm_ScanIterator.attributeNames = attributeNames;
-//        rbfm_ScanIterator.recordDescriptor = recordDescriptor;
-//        rbfm_ScanIterator.compOp = compOp;
+        rbfm_ScanIterator.attributeNames = attributeNames;
+        rbfm_ScanIterator.recordDescriptor = recordDescriptor;
+        rbfm_ScanIterator.compOp = compOp;
         if (compOp != NO_OP) {
             if (rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar) {
                 int varcharLen = 0;
