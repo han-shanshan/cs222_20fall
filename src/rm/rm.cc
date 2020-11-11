@@ -40,7 +40,7 @@ namespace PeterDB {
     vector<Attribute> RelationManager::getColumnsTableDescriptor() {
         vector<Attribute> columnAttrs;
         columnAttrs.push_back(attribute("table-id", TypeInt, 4));
-        columnAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
+        columnAttrs.push_back(attribute("column-name", TypeVarChar, 50));
         columnAttrs.push_back(attribute("column-type", TypeInt, 4));
         columnAttrs.push_back(attribute("column-length", TypeInt, 4));
         columnAttrs.push_back(attribute("column-position", TypeInt, 4));
@@ -176,7 +176,6 @@ namespace PeterDB {
         FileHandle tablCatalogFH;
         rbfm.openFile(tableFileName, tablCatalogFH);
 
-//        rbfm.printRecord(tablesTableDescriptor, buffer, std::cout);
         rbfm.insertRecord(tablCatalogFH, tablesTableDescriptor, buffer, tableRid);
         rbfm.closeFile(tablCatalogFH);
 
@@ -400,7 +399,6 @@ namespace PeterDB {
         //filterValue is also tableId
         rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
                   EQ_OP, filterValue, attributeNames2, columnIterator);
-//        memset(columnIterator.tempData, 0, PAGE_SIZE);
 
         while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
 //            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
@@ -424,8 +422,7 @@ namespace PeterDB {
     int RelationManager::getTableIdUsingTableName(string tableName) {
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
-//        int tableId = -1;
-int tableId = 0;
+        int tableId = -1;
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
         rbfm.openFile(TABLE_CATALOG_FILE, fileHandle_table);
         vector<string> attributeName_tableid;
@@ -503,8 +500,9 @@ int tableId = 0;
 
         while (iterator.getNextRecord(rid2, recordData) != RM_EOF) {
             offset = 0;
+//            rbfm.printRecord(columnRecordDescriptors, recordData, std::cout);
 //            memset(iterator.tempData, 0, PAGE_SIZE);
-            rbfm.encodeRecordData_returnSlotLength(columnRecordDescriptors_Output, recordData, tempData);
+            int slotLne = rbfm.encodeRecordData_returnSlotLength(columnRecordDescriptors_Output, recordData, tempData);
             memcpy(&varcharLen, tempData, sizeof(int));
             offset += sizeof(int);
             memcpy(encodedFilteredData, (char*)tempData + offset, varcharLen);
@@ -513,8 +511,8 @@ int tableId = 0;
             memcpy(&columnType, (char*)tempData + offset, sizeof(int));
             offset += sizeof(int);
             offset += sizeof(int);
-//            if(columnType == 0){type = TypeInt; }
-            if(columnType == 1){type = TypeReal; }
+            if(columnType == 0){type = TypeInt; }
+            else if(columnType == 1){type = TypeReal; }
             else if(columnType == 2){type = TypeVarChar; }
             memcpy(&columnLen, (char*)tempData + offset, sizeof(int));
             offset += sizeof(int);
@@ -642,6 +640,7 @@ int tableId = 0;
                              const std::vector<std::string> &attributeNames,
                              RM_ScanIterator &rm_ScanIterator) {
         FileHandle fileHandle;
+
         if(!rbfm.isFileExisting(tableName)) {return -1;}
 
         if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0 ){

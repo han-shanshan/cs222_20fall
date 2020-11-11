@@ -51,7 +51,6 @@ namespace PeterDB {
         char encodedData[PAGE_SIZE];
         int slotLength = encodeRecordData_returnSlotLength(recordDescriptor, data, encodedData);
         if (fileHandle.file == nullptr) { return -1; } //error;
-//    cout<<"slotlength = "<<slotLength<<endl;
         int res = insertEncodedRecord(fileHandle, rid, encodedData, slotLength);
         if (res != 0) { return -1; }
         return 0;
@@ -249,10 +248,7 @@ namespace PeterDB {
             int directedOffset = 0, directedLength = 0;
             char directedPageData[PAGE_SIZE];
             fileHandle.readPage(directedRid.pageNum, directedPageData);
-//        cout<<"page data: "<<endl;
-//        printStr(PAGE_SIZE, (char*)directedPageData);
             int directedSlotTableLen = getSlotTableLength(directedPageData);
-//        printSlotTable(directedPageData, 100);
             getOffsetAndLengthUsingSlotNum(directedRid.slotNum, directedPageData,
                                            directedSlotTableLen, directedOffset, directedLength);
             if (directedLength < 0) {//actually it is definitely < 0
@@ -791,10 +787,8 @@ namespace PeterDB {
             return -1; //fail to read the record
         }
         char encodedNotFilteredData[PAGE_SIZE];
-
         //判断是否满足filter条件，如果不满足，则set read_res to -1
         rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
-//        rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
 
         //add filter. 如果没有通过filter则set read_res to -1
         int read_res = 0;
@@ -821,7 +815,7 @@ namespace PeterDB {
 
                 }
             }
-            std::stringstream stream;
+//            std::stringstream stream;
             rbfm.decodeData(selectedRecordDescriptor, data, encodedFilteredData);
         }
         return read_res;
@@ -831,7 +825,6 @@ namespace PeterDB {
     RC RecordBasedFileManager::printEncodedRecord(const std::vector<Attribute> &recordDescriptor, const void *data) {
         int offset = 0;
         int tempInt = 0;
-        std::stringstream stream;
         for (int i = 0; i < recordDescriptor.size(); i++) {
             memcpy(&tempInt, (char *) data + offset, sizeof(int));
             offset += sizeof(int);
@@ -851,7 +844,7 @@ namespace PeterDB {
                     memcpy(strValue, (char *) data + offset, tempInt);
                     offset += tempInt;
                     cout << "    " << recordDescriptor[i].name << ": ";//
-                    printStr(tempInt, strValue, stream);
+                    printStr(tempInt, strValue, std::cout);
                 }
             } else {
                 cout << "    " << recordDescriptor[i].name << ": NULL";
