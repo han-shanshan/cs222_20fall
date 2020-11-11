@@ -87,6 +87,7 @@ namespace PeterDB {
 
         int getTheCurrentData(RID rid, void *data);
 
+//        void setIterator(RBFM_ScanIterator &iterator, RID &rid) const;
     };
 
     class RecordBasedFileManager {

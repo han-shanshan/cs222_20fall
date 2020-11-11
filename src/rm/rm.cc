@@ -26,7 +26,8 @@ namespace PeterDB {
         if(rbfm.isFileExisting(TABLE_CATALOG_FILE)){rbfm.destroyFile(TABLE_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
         if(rbfm.isFileExisting(COLUMN_CATALOG_FILE)){rbfm.destroyFile(COLUMN_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
 //        if(rbfm.isFileExisting(INDEX_CATALOG_FILE)){rbfm.destroyFile(INDEX_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
-
+        rbfm.createFile(TABLE_CATALOG_FILE);
+        rbfm.createFile(COLUMN_CATALOG_FILE);
         //Tables (table-id:int, table-fileName:varchar(50), file-fileName:varchar(50))
         //Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
         if(createTable(TABLE_CATALOG_FILE, getTablesTableDescriptor()) == 0
@@ -40,7 +41,7 @@ namespace PeterDB {
     vector<Attribute> RelationManager::getColumnsTableDescriptor() {
         vector<Attribute> columnAttrs;
         columnAttrs.push_back(attribute("table-id", TypeInt, 4));
-        columnAttrs.push_back(attribute("column-name", TypeVarChar, 50));
+        columnAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
         columnAttrs.push_back(attribute("column-type", TypeInt, 4));
         columnAttrs.push_back(attribute("column-length", TypeInt, 4));
         columnAttrs.push_back(attribute("column-position", TypeInt, 4));
@@ -79,22 +80,21 @@ namespace PeterDB {
         string columnsTableName = COLUMN_CATALOG_FILE;
         FileHandle fileHandle;
         RC rc = rbfm.openFile(tablesTableName, fileHandle);
-        if(rc != 0){ return -1; } //cout<<"fail to delete the record: the file has already been deleted."<<endl;
+        if(rc != 0){ return 0; } //cout<<"fail to delete the record: the file has already been deleted."<<endl;
 
         RBFM_ScanIterator iterator;
         vector<std::string> attributeNames;
         attributeNames.push_back("table-fileName");
         RID rid;
-        rid.pageNum = 0;
-        rid.slotNum = 0;
+//        rid.pageNum = 0;
+//        rid.slotNum = 0;
         vector<Attribute> recordDescriptors = getTablesTableDescriptor();
         rbfm.scan(fileHandle, recordDescriptors, "",
                   NO_OP, "", attributeNames, iterator);
         int fileNameLen = 0;
         int res = 0;
-
         char tempData[PAGE_SIZE];
-
+        iterator.isIteratorNew = true;
         while (iterator.getNextRecord(rid, tempData) != RM_EOF) {
             memcpy(&fileNameLen, (char*)tempData + 1, sizeof(int));
             string fileName((char*)tempData + 1 + sizeof(int), fileNameLen);
@@ -106,15 +106,18 @@ namespace PeterDB {
             }
             memset(tempData, 0, PAGE_SIZE);
         }
+        rbfm.closeFile(fileHandle);
         iterator.close();
         res = rbfm.destroyFile(TABLE_CATALOG_FILE);
         res = rbfm.destroyFile(COLUMN_CATALOG_FILE);
         res = rbfm.destroyFile(INDEX_CATALOG_FILE);
 //        res = rbfm.destroyFile(SYSTEM_FILE_NAME);
-        rbfm.closeFile(fileHandle);
+
         // Todo 删除所有index 文件
         return 0;
     }
+
+
 
 //
 //    RC RelationManager::createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs) {
@@ -149,10 +152,10 @@ namespace PeterDB {
         string tableFileName = TABLE_CATALOG_FILE;
         if((!rbfm.isFileExisting(tableFileName)) &&
            !isSystemTable(tableName)) {return -1;} // catalog file does not exist
-        if (rbfm.isFileExisting(tableName)) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
+        if (rbfm.isFileExisting(tableName) && !isSystemTable(tableName)) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
 
         //if this table already exists, return 1;
-        rbfm.createFile(tableName);
+        if(!isSystemTable(tableName)) {rbfm.createFile(tableName); }
         RID tableRid;
         /* ******** insert into the catolog-table file ******** */
         vector<Attribute> tablesTableDescriptor = getTablesTableDescriptor();
@@ -194,8 +197,6 @@ namespace PeterDB {
 
         RID columnRid;
         int columnPosition = 1;
-//    cout<<"insert into columns table --- "<<endl;
-//    void * encodedTempData;
         for (int j = 0; j < attrs.size(); j++){
             columnAttrValues.push_back(to_string(tableId));
             columnAttrValues.push_back(attrs[j].name);
@@ -246,8 +247,8 @@ namespace PeterDB {
         vector<string> attributeNames;
         attributeNames.push_back(columnName);
         RID rid;
-        rid.pageNum = 0;
-        rid.slotNum = 0;
+//        rid.pageNum = 0;
+//        rid.slotNum = 0;
         FileHandle fileHandle;
         rbfm.openFile(fileName, fileHandle);
 
@@ -257,7 +258,6 @@ namespace PeterDB {
 //        memset(iterator.tempData, 0, PAGE_SIZE);
         int tempTableId = 0;
         char tempData[PAGE_SIZE];
-
         while(iterator.getNextRecord(rid, tempData) != RM_EOF) {
             memcpy(&tempTableId, (char*)tempData + 1, sizeof(int));
 //        cout<<tempTableId<<"---temptable id "<<endl;
@@ -367,10 +367,10 @@ namespace PeterDB {
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
         RID tableRid, columnRid;
-        tableRid.pageNum = 0;
-        tableRid.slotNum = 0;
-        columnRid.pageNum = 0;
-        columnRid.slotNum = 0;
+//        tableRid.pageNum = 0;
+//        tableRid.slotNum = 0;
+//        columnRid.pageNum = 0;
+//        columnRid.slotNum = 0;
         vector<Attribute> recordDescriptor_column = getColumnsTableDescriptor();
         vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
         vector<string> attributeNames2;
@@ -383,8 +383,9 @@ namespace PeterDB {
         //////////////////////////////////delete records in Tables table
         rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
                   EQ_OP, filterValue, attributeNames2, tableIterator);
-
+        tableIterator.isIteratorNew = true;
         if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
+            tableIterator.isIteratorNew = true;
 //        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
             RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
             if(res != 0) {return -1; }
@@ -399,7 +400,6 @@ namespace PeterDB {
         //filterValue is also tableId
         rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
                   EQ_OP, filterValue, attributeNames2, columnIterator);
-
         while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
 //            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
             RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
@@ -437,9 +437,8 @@ namespace PeterDB {
 
         char tempData[PAGE_SIZE];
         RID tableIdRid;
-        tableIdRid.pageNum = 0;
-        tableIdRid.slotNum = 0;
         if (tableIdIterator.getNextRecord(tableIdRid, tempData) != RM_EOF) {
+            tableIdIterator.isIteratorNew = true;
             memcpy(&tableId, (char*)tempData + 1, sizeof(int)); //
         }
         tableIdIterator.close();
@@ -478,8 +477,8 @@ namespace PeterDB {
         }
 
         RID rid2;
-        rid2.pageNum = 0;
-        rid2.slotNum = 0;
+//        rid2.pageNum = 0;
+//        rid2.slotNum = 0;
         ////////////////////////////////////
         char value[PAGE_SIZE];
         memcpy(value, &tableId, sizeof(int));
@@ -497,7 +496,6 @@ namespace PeterDB {
         char encodedFilteredData[PAGE_SIZE];
         char tempData[PAGE_SIZE];
         char recordData[PAGE_SIZE];
-
         while (iterator.getNextRecord(rid2, recordData) != RM_EOF) {
             offset = 0;
 //            rbfm.printRecord(columnRecordDescriptors, recordData, std::cout);
@@ -662,7 +660,12 @@ namespace PeterDB {
 
     RM_ScanIterator::~RM_ScanIterator() = default;
 
-    RC RM_ScanIterator::getNextTuple(RID &rid, void *data) { return rbfm_scanner.getNextRecord(rid, data); }
+    RC RM_ScanIterator::getNextTuple(RID &rid, void *data) {
+//        rbfm_scanner.setIterator(rbfm_scanner, rid);
+//cout<<"in getNextTuple: "<<endl;
+//        rbfm.printRecord(rbfm_scanner.selectedRecordDescriptor, data, std::cout);
+        return rbfm_scanner.getNextRecord(rid, data);
+    }
 
     RC RM_ScanIterator::close() {
         this->rbfm_scanner.close();

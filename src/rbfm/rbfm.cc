@@ -49,6 +49,8 @@ namespace PeterDB {
                                             const void *data, RID &rid) {
         //rid: page num, slot num;
         char encodedData[PAGE_SIZE];
+//        cout<<endl<<"in insertRecord: "<<endl;
+//        this->printRecord(recordDescriptor, data, std::cout);
         int slotLength = encodeRecordData_returnSlotLength(recordDescriptor, data, encodedData);
         if (fileHandle.file == nullptr) { return -1; } //error;
         int res = insertEncodedRecord(fileHandle, rid, encodedData, slotLength);
@@ -188,6 +190,7 @@ namespace PeterDB {
 
     int RecordBasedFileManager::encodeRecordData_returnSlotLength(const std::vector<Attribute> &recordDescriptor,
                                                                   const void *data, void *encodedData) {
+        this->printRecord(recordDescriptor, data, std::cout);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         int nullIndicatorNum = ceil((double) attrNum / CHAR_BIT);
         char *nullIndicatorStr = (char *) malloc(nullIndicatorNum);
@@ -737,34 +740,46 @@ namespace PeterDB {
 //            rid.slotNum = 0;
 //            rid.pageNum = 0;
 //        }
-        char tempData[PAGE_SIZE];
-        if (isIteratorNew) {
-            rid.slotNum = 0;
-            rid.pageNum = 0;
-            isIteratorNew = false;
-            if (iteratorHandle.readPage(rid.pageNum, tempData) != 0) {
-                return -1;
-            }
-            memset(tempData, 0, PAGE_SIZE);
-            if (getTheCurrentData(rid, tempData) == 0) {
-                memcpy(data, tempData, 300);
-                return 0;
-            }
-        }
+//        char tempData[PAGE_SIZE];
+//        if (isIteratorNew) {
+//            rid.slotNum = 0;
+//            rid.pageNum = 0;
+//            isIteratorNew = false;
+//            if (iteratorHandle.readPage(rid.pageNum, tempData) != 0) {
+//                return -1;
+//            }
+//            memset(tempData, 0, PAGE_SIZE);
+//            if (getTheCurrentData(rid, tempData) == 0) {
+//                memcpy(data, tempData, 300);
+//                return 0;
+//            }
+//        }
 
         char pageData[PAGE_SIZE];
+        char lastData[PAGE_SIZE];
+        if((getTheCurrentData(rid, lastData) != 0) || isIteratorNew) {
+            isIteratorNew = true;
+            rid.slotNum = 0;
+            rid.pageNum = 0;
+        }
         while ((rid.pageNum < iteratorHandle.getNumberOfPages())) {
 //        cout<<"iteratorHandle.getNumberOfPages = "<<iteratorHandle.getNumberOfPages();
             readPage_res = iteratorHandle.readPage(rid.pageNum, pageData);
             if (readPage_res != 0) { break; }
             int slotCounter = rbfm.getSlotTableLength(pageData) / (2 * SLOT_TABLE_FIELD_LEN);
-//        cout<<", slotcounter = "<<slotCounter<<endl;
             char currentData[PAGE_SIZE];
-            while ((rid.slotNum < slotCounter - 1)) {
+            if(isIteratorNew) {
+                isIteratorNew = false;
+//                rid.slotNum = 0;
+//                rid.pageNum = 0;
+                read_res = getTheCurrentData(rid, currentData);
+//                if (read_res != -1) { break; }
+            }
+            while ((read_res == -1) && (rid.slotNum < slotCounter - 1)) {
                 rid.slotNum++;
                 read_res = getTheCurrentData(rid, currentData);
-                if (read_res != -1) { break; }
-                memset(currentData, 0, PAGE_SIZE);
+//                if (read_res != -1) { break; }
+//                memset(currentData, 0, PAGE_SIZE);
             }
             if (read_res == 0) {
                 memcpy(data, currentData, 300);
@@ -773,12 +788,20 @@ namespace PeterDB {
             rid.pageNum++;
             rid.slotNum = 0;
         }
+        if(read_res != 0) {this->isIteratorNew = true;}
         return read_res;
     }
+
+//    void RBFM_ScanIterator::setIterator(RBFM_ScanIterator &iterator, RID &rid) const {
+//        rid.slotNum = 0;
+//        rid.pageNum = 0;
+//        iterator.isIteratorNew = true;
+//    }
 
 
     int RBFM_ScanIterator::getTheCurrentData(RID rid, void *data) {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
+
         if (rid.pageNum >= iteratorHandle.getNumberOfPages()) {
             return -1;
         }
@@ -786,6 +809,7 @@ namespace PeterDB {
         if (rbfm.readRecord(iteratorHandle, recordDescriptor, rid, notFilteredData) != 0) {
             return -1; //fail to read the record
         }
+//        rbfm.printRecord(this->recordDescriptor, notFilteredData, std::cout);
         char encodedNotFilteredData[PAGE_SIZE];
         //判断是否满足filter条件，如果不满足，则set read_res to -1
         rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
@@ -936,6 +960,7 @@ namespace PeterDB {
                 break;
             }
         }
+        free(attrDataToFilter);
         return isRecordSatisfied;
     }
 

@@ -145,6 +145,7 @@ namespace PeterDB {
         int
         prepareDecodedRecord(char *nullFieldsIndicator, vector<Attribute> columnDescriptor, vector<string> attrValues,
                              void *buffer);
+
     };
 
 } // namespace PeterDB
