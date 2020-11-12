@@ -34,7 +34,7 @@ namespace PeterDB {
         if(createTable(TABLE_CATALOG_FILE, getTablesTableDescriptor()) == 0
            && createTable(COLUMN_CATALOG_FILE, getColumnsTableDescriptor()) == 0
 //           && createSystemTable(INDEXES_TABLE_NAME, getIndexesTableDescriptor()) == 0
-           ){return 0;}
+                ){return 0;}
         else
             return -1;
     }
@@ -155,12 +155,12 @@ namespace PeterDB {
         if((!rbfm.isFileExisting(tableFileName)) &&
            !isSystemTable(tableName)) {return -1;} // catalog file does not exist
         if (rbfm.isFileExisting(tableName)
-        && !isSystemTable(tableName)
-        ) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
+            && !isSystemTable(tableName)
+                ) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
 
         //if this table already exists, return 1;
 //        if(!isSystemTable(tableName)) {
-            rbfm.createFile(tableName);
+        rbfm.createFile(tableName);
 //        }
         RID tableRid;
         /* ******** insert into the catolog-table file ******** */

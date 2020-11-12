@@ -78,7 +78,7 @@ namespace PeterDB {
 //        void *filterValue = malloc(PAGE_SIZE);
         std::vector<std::string> attributeNames;
         bool isIteratorNew; //用于判断是否需要从0， 0开始读
-        RID lastValidateRID;
+        RID lastRID;
 
         bool isDescriptorRequired(const std::vector<std::string> &attributeNames, const std::string &name) const;
 
