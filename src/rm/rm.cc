@@ -180,7 +180,6 @@ namespace PeterDB {
         rbfm.openFile(column_file_name, colCatalogFH);
         vector<string> columnAttrValues;
         vector<Attribute> colTableDescriptor = getColumnsTableDescriptor();
-        memset(nullsIndicator, 0, 1);//
 
         RID columnRid;
         int columnPosition = 1;
@@ -192,7 +191,6 @@ namespace PeterDB {
             columnAttrValues.push_back(to_string(columnPosition));
             columnPosition ++;
             //prepare the column buffer
-//            memset(buffer, 0, PAGE_SIZE);
             prepareDecodedRecord(nullsIndicator, colTableDescriptor, columnAttrValues, buffer);
 //            rbfm.printRecord(colTableDescriptor, buffer, std::cout);
             rbfm.insertRecord(colCatalogFH, colTableDescriptor, buffer, columnRid);
@@ -250,7 +248,6 @@ namespace PeterDB {
             if(tempTableId >= flagTableId){
                 flagTableId = tempTableId;
             }
-//            memset(tempData, 0, PAGE_SIZE);// null indicator + intlen + int
         }
         iterator.close();
         rbfm.closeFile(fileHandle);

@@ -118,13 +118,11 @@ namespace PeterDB {
                     memcpy((char *) pageData + PAGE_SIZE - INT_FIELD_LEN, &freeSpc, sizeof(int));
                     memcpy((char *) pageData + PAGE_SIZE - 2 * INT_FIELD_LEN, &slotTableLen, sizeof(int));
                     fileHandle.writePage(i, pageData);
-//                    free(pageData);
                     free(slotTable);
                     break;
                 }
-//                free(slotTable);////////////////////
+//                free(oldSlotTable);
             }
-//            free(pageData);
         }
 
         if (!isPageFound) { //new Page
@@ -141,7 +139,6 @@ namespace PeterDB {
             memcpy((char *) pageData + PAGE_SIZE - (SLOT_TABLE_FIELD_LEN), &freeSpc, sizeof(int));
             memcpy((char *) pageData + PAGE_SIZE - (2 * SLOT_TABLE_FIELD_LEN), &slotTableLen, sizeof(int));
             fileHandle.appendPage(pageData);
-//            free(pageData);
             free(slotTable);
         }
         return 0;
@@ -468,7 +465,6 @@ namespace PeterDB {
         int nullIndicatorNum = ceil(1.0 * recordDescriptor.size() / CHAR_BIT);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         nullIndicatorStr = (unsigned char *) malloc(nullIndicatorNum);
-        memset(nullIndicatorStr, 0, nullIndicatorNum);
         memcpy(nullIndicatorStr, data, nullIndicatorNum);
         return nullIndicatorNum;
     }
@@ -494,12 +490,12 @@ namespace PeterDB {
                 } else { //  TypeVarChar
                     int varcharLen = 0;
                     memcpy(&varcharLen, (char *) data + offset, sizeof(int));
-                    char *strValue = (char *) malloc(varcharLen);
+                    void *strValue = (char *) malloc(varcharLen);
                     offset += sizeof(int);
                     memcpy(strValue, (char *) data + offset, varcharLen);
                     offset += varcharLen;
                     out << "    " << recordDescriptor[i].name << ": ";//
-                    printStr(varcharLen, strValue, out);
+                    printStr(varcharLen, (char*)strValue, out);
 //                cout<<endl;
                     free(strValue);
                 }
@@ -954,7 +950,6 @@ namespace PeterDB {
                 break;
             }
         }
-//        free(attrVal);
         return isRecordSatisfied;
     }
 
