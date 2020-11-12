@@ -121,7 +121,7 @@ namespace PeterDB {
                     free(slotTable);
                     break;
                 }
-//                free(oldSlotTable);
+                free(oldSlotTable);
             }
         }
 
