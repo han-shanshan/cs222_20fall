@@ -129,7 +129,7 @@ namespace PeterDB {
 
         int getTableIdUsingTableName(std::string tableName);
 
-        RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
+//        RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
 
         bool isSystemTable(const std::string &tableName);
 
@@ -146,6 +146,11 @@ namespace PeterDB {
         prepareDecodedRecord(char *nullFieldsIndicator, vector<Attribute> columnDescriptor, vector<string> attrValues,
                              void *buffer);
 
+//        RC insertIntoColumnFile(const vector<Attribute> &attrs, int tableId);
+
+//        int insertIntoTableFile_returnTableID(const string &tableName);
+//
+//        RC insertIntoColumnFile(int tableId);
     };
 
 } // namespace PeterDB

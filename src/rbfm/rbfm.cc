@@ -132,7 +132,6 @@ namespace PeterDB {
             rid.pageNum = numOfPages;
             rid.slotNum = 0;
             freeSpc = PAGE_SIZE - (2 * SLOT_TABLE_FIELD_LEN) - 2 * sizeof(int) - positiveSlotLength;
-//            memset(pageData, 0, PAGE_SIZE);
             memcpy((void *) pageData, encodedData, positiveSlotLength);
             slotTable = malloc(2 * SLOT_TABLE_FIELD_LEN);
             slotTableLen = 2 * SLOT_TABLE_FIELD_LEN;
@@ -735,38 +734,25 @@ namespace PeterDB {
     RC RBFM_ScanIterator::getNextRecord(RID &rid, void *data) {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         RC readPage_res, read_res = -1;
-        // todo: pagenum slot num = 0?
-//        if (rid.slotNum > PAGE_SIZE / (2 * INT_FIELD_LEN) || rid.pageNum >= iteratorHandle.getNumberOfPages()) {
-//            rid.slotNum = 0;
-//            rid.pageNum = 0;
-//        }
-//        char tempData[PAGE_SIZE];
-//        if (isIteratorNew) {
-//            rid.slotNum = 0;
-//            rid.pageNum = 0;
-//            isIteratorNew = false;
-//            if (iteratorHandle.readPage(rid.pageNum, tempData) != 0) {
-//                return -1;
-//            }
-//            memset(tempData, 0, PAGE_SIZE);
-//            if (getTheCurrentData(rid, tempData) == 0) {
-//                memcpy(data, tempData, 300);
-//                return 0;
-//            }
-//        }
 
         char pageData[PAGE_SIZE];
 //        char lastData[PAGE_SIZE];
 //        if((getTheCurrentData(rid, lastData) != 0)){isIteratorNew = true;}
-        if(lastRID.pageNum != rid.pageNum || lastRID.slotNum != rid.slotNum) {
-            isIteratorNew = true;
-        }
         if(isIteratorNew) {
             rid.slotNum = 0;
             rid.pageNum = 0;
 //            lastRID.pageNum = rid.pageNum;
 //            lastRID.slotNum = rid.slotNum;
         }
+        if(lastRID.pageNum != rid.pageNum || lastRID.slotNum != rid.slotNum) {
+            isIteratorNew = true;
+        }
+//        if(isIteratorNew) {
+//            rid.slotNum = 0;
+//            rid.pageNum = 0;
+////            lastRID.pageNum = rid.pageNum;
+////            lastRID.slotNum = rid.slotNum;
+//        }
         while ((rid.pageNum < iteratorHandle.getNumberOfPages())) {
 //        cout<<"iteratorHandle.getNumberOfPages = "<<iteratorHandle.getNumberOfPages();
             readPage_res = iteratorHandle.readPage(rid.pageNum, pageData);
