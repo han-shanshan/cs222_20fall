@@ -756,8 +756,11 @@ namespace PeterDB {
 //        }
 
         char pageData[PAGE_SIZE];
-        char lastData[PAGE_SIZE];
-        if((getTheCurrentData(rid, lastData) != 0)){isIteratorNew = true;}
+//        char lastData[PAGE_SIZE];
+//        if((getTheCurrentData(rid, lastData) != 0)){isIteratorNew = true;}
+        if(!isIteratorNew && (lastValidateRID.pageNum != rid.pageNum || lastValidateRID.slotNum != rid.slotNum)) {
+            isIteratorNew = true;
+        }
         if(isIteratorNew) {
             rid.slotNum = 0;
             rid.pageNum = 0;
@@ -778,11 +781,11 @@ namespace PeterDB {
             while ((read_res == -1) && (rid.slotNum < slotCounter - 1)) {
                 rid.slotNum++;
                 read_res = getTheCurrentData(rid, currentData);
-//                if (read_res != -1) { break; }
-//                memset(currentData, 0, PAGE_SIZE);
             }
             if (read_res == 0) {
                 memcpy(data, currentData, 300);
+                lastValidateRID.pageNum = rid.pageNum;
+                lastValidateRID.slotNum = rid.slotNum;
                 break;
             }
             rid.pageNum++;

@@ -78,6 +78,7 @@ namespace PeterDB {
 //        void *filterValue = malloc(PAGE_SIZE);
         std::vector<std::string> attributeNames;
         bool isIteratorNew; //用于判断是否需要从0， 0开始读
+        RID lastValidateRID;
 
         bool isDescriptorRequired(const std::vector<std::string> &attributeNames, const std::string &name) const;
 
@@ -163,6 +164,7 @@ namespace PeterDB {
         bool isFileExisting(const string &fileName);
         int getSlotTableLength(void *pageData);
         int decodeData(const vector <Attribute> &recordDescriptor, void *data, const void *encodedData);
+        void printStr(int varcharLen, const char *strValue, ostream &out) const;
 
 
         RC printEncodedRecord(const vector<Attribute> &recordDescriptor, const void *data);
@@ -216,7 +218,6 @@ namespace PeterDB {
 
 //        void printStr(int varcharLen, const char *strValue) const;
 
-        void printStr(int varcharLen, const char *strValue, ostream &out) const;
 
         int getLastInteger(void *pageData, int index);
 
