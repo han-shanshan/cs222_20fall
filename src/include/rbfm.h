@@ -84,11 +84,12 @@ namespace PeterDB {
 
 //    bool getIsRecordSatisfied(const RID &rid, RecordBasedFileManager &rbfm, void *attrDataToFilter, FileHandle handle) const;
 
-        bool getIsRecordSatisfied(const RID rid, FileHandle handle) const;
+//        bool getIsRecordSatisfied(const RID rid, FileHandle handle) const;
 
         int getTheCurrentData(RID rid, void *data);
 
 //        void setIterator(RBFM_ScanIterator &iterator, RID &rid) const;
+        bool getIsRecordSatisfied(char *encodedNotFilteredData) const;
     };
 
     class RecordBasedFileManager {
@@ -168,6 +169,8 @@ namespace PeterDB {
 
 
         RC printEncodedRecord(const vector<Attribute> &recordDescriptor, const void *data);
+        void readAttributeFromEncodeData(const vector<Attribute> &recordDescriptor, const string &attributeName,
+                                         const char *encodedRecord, void *attrValue) const;
 
     protected:
         RecordBasedFileManager();                                                   // Prevent construction
@@ -233,6 +236,7 @@ namespace PeterDB {
         void updateSlotTableLen(void *pageData, int len);
 
         void addPageTail(void *pageData, int freeSpc, char *slotTable, int slotTableLen);
+
 
     };
 

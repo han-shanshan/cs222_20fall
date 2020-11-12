@@ -57,8 +57,8 @@ namespace PeterDB {
     vector<Attribute> RelationManager::getTablesTableDescriptor() {
         vector<Attribute> tableAttrs;
         tableAttrs.push_back(attribute("table-id", TypeInt, 4));
-        tableAttrs.push_back(attribute("table-fileName", TypeVarChar, 50));
-        tableAttrs.push_back(attribute("file-fileName", TypeVarChar, 50));
+        tableAttrs.push_back(attribute("table-name", TypeVarChar, 50));
+        tableAttrs.push_back(attribute("file-name", TypeVarChar, 50));
         return tableAttrs;
     }
 
@@ -91,7 +91,7 @@ namespace PeterDB {
 
         RBFM_ScanIterator iterator;
         vector<std::string> attributeNames;
-        attributeNames.push_back("table-fileName");
+        attributeNames.push_back("table-name");
         RID rid;
 //        rid.pageNum = 0;
 //        rid.slotNum = 0;
@@ -137,9 +137,7 @@ namespace PeterDB {
         string tableFileName = TABLE_CATALOG_FILE;
         if((!rbfm.isFileExisting(tableFileName)) &&
            !isSystemTable(tableName)) {return -1;} // catalog file does not exist
-        if (rbfm.isFileExisting(tableName)
-            && !isSystemTable(tableName)
-                ) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
+        if (rbfm.isFileExisting(tableName)&& !isSystemTable(tableName)) {return 1; }// cout << "Fail to create this table: the table is already exists. " << endl;}
 
         //if this table already exists, return 1;
         if(!isSystemTable(tableName)) {
@@ -387,6 +385,7 @@ namespace PeterDB {
         rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
                   EQ_OP, filterValue, attributeNames2, columnIterator);
         while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
+//            rbfm.printRecord(recordDescriptor_column, tempData, std::cout);
 //            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
             RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
             if(res != 0) {return -1;}
@@ -418,7 +417,7 @@ namespace PeterDB {
         int tableNameLen = tableName.length();
         memcpy(filterValue, &tableNameLen, sizeof(int));
         memcpy((char*)filterValue + sizeof(int), tableName.c_str(), tableNameLen);
-        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-fileName",
+        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-name",
                   EQ_OP, filterValue, attributeName_tableid, tableIdIterator);
 
         char tempData[PAGE_SIZE];

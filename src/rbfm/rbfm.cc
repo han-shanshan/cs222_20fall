@@ -649,6 +649,14 @@ namespace PeterDB {
         char encodedRecord[PAGE_SIZE];
         encodeRecordData_returnSlotLength(recordDescriptor, record, encodedRecord);
 
+        readAttributeFromEncodeData(recordDescriptor, attributeName, encodedRecord, data);
+
+        return 0;
+    }
+
+    void RecordBasedFileManager::readAttributeFromEncodeData(const vector<Attribute> &recordDescriptor,
+                                                             const string &attributeName, const char *encodedRecord,
+                                                             void *attrValue) const {
         int offset = 0;
         int fieldLen = 0;
         char *nullFieldsIndicator = (char *) malloc(1);
@@ -660,20 +668,20 @@ namespace PeterDB {
             if (isAttrFound(attributeName, i, recordDescriptor)) {
                 if (fieldLen == -1) { //null
                     nullFieldsIndicator[0] = nullFieldsIndicator[0] | (1 << 7);
-                    memcpy(data, nullFieldsIndicator, 1);
+                    memcpy(attrValue, nullFieldsIndicator, 1);
                 } else {
-                    memcpy(data, nullFieldsIndicator, 1);
+                    memcpy(attrValue, nullFieldsIndicator, 1);
                     if (recordDescriptor[i].type == TypeInt) {
                         int int_attr;
                         memcpy(&int_attr, (char *) encodedRecord + offset, recordDescriptor[i].length);
-                        memcpy((char *) data + 1, &int_attr, sizeof(int));
+                        memcpy((char *) attrValue + 1, &int_attr, sizeof(int));
                     } else if (recordDescriptor[i].type == TypeReal) {
                         float floatValue = 0.00;
                         memcpy(&floatValue, (char *) encodedRecord + offset, recordDescriptor[i].length);
-                        memcpy((char *) data + 1, &floatValue, sizeof(float));
+                        memcpy((char *) attrValue + 1, &floatValue, sizeof(float));
                     } else {
-                        memcpy((char *) data + 1, &fieldLen, sizeof(int));
-                        memcpy((char *) data + 1 + sizeof(int), (char *) encodedRecord + offset, fieldLen);
+                        memcpy((char *) attrValue + 1, &fieldLen, sizeof(int));
+                        memcpy((char *) attrValue + 1 + sizeof(int), (char *) encodedRecord + offset, fieldLen);
                     }
                 }
                 break;
@@ -681,7 +689,6 @@ namespace PeterDB {
                 if (fieldLen != -1) { offset += fieldLen; }
             }
         }
-        return 0;
     }
 
 
@@ -746,6 +753,8 @@ namespace PeterDB {
         }
         if(lastRID.pageNum != rid.pageNum || lastRID.slotNum != rid.slotNum) {
             isIteratorNew = true;
+            rid.slotNum = 0;
+            rid.pageNum = 0;
         }
 //        if(isIteratorNew) {
 //            rid.slotNum = 0;
@@ -798,10 +807,11 @@ namespace PeterDB {
         char encodedNotFilteredData[PAGE_SIZE];
         //判断是否满足filter条件，如果不满足，则set read_res to -1
         rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
-
+//rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
         //add filter. 如果没有通过filter则set read_res to -1
         int read_res = 0;
-        if (!this->getIsRecordSatisfied(rid, iteratorHandle)) { read_res = -1; }
+
+        if (!this->getIsRecordSatisfied(encodedNotFilteredData)) { read_res = -1; }
         else {
             int fieldLen = 0;
             int encodedNotFilteredDataOffset = 0;
@@ -864,17 +874,16 @@ namespace PeterDB {
     }
 
 
-    bool RBFM_ScanIterator::getIsRecordSatisfied(const RID rid,
-                                                 FileHandle handle) const {
+    bool RBFM_ScanIterator::getIsRecordSatisfied(char *encodedNotFilteredData) const {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         if (this->conditionAttributeAttr.length == -1 || this->compOp == NO_OP) {//no condition , no need to filter
             return true;
         }
-        void *attrDataToFilter = malloc(this->conditionAttributeAttr.length + 1);
-        rbfm.readAttribute(handle, this->recordDescriptor,
-                           rid, this->conditionAttributeAttr.name, attrDataToFilter);
+        char attrVal[PAGE_SIZE];
+        rbfm.readAttributeFromEncodeData(recordDescriptor, conditionAttributeAttr.name, encodedNotFilteredData, attrVal);
+
         char *nullFieldsIndicator = (char *) malloc(1);
-        memcpy(nullFieldsIndicator, attrDataToFilter, 1);
+        memcpy(nullFieldsIndicator, attrVal, 1);
         if (nullFieldsIndicator[0] | (1 << 7) == 1) {
             return false; //null
         }
@@ -886,14 +895,14 @@ namespace PeterDB {
 //  compare with filterValue
         switch (this->conditionAttributeAttr.type) {
             case TypeInt: {
-                memcpy(&int_attrDataToFilter, (char *) attrDataToFilter + 1, sizeof(int));
+                memcpy(&int_attrDataToFilter, (char *) attrVal + 1, sizeof(int));
                 memcpy(&intFilterValue, this->filterValue, sizeof(int));
 //            cout<<"intFilterValue = "<<intFilterValue<<endl;
                 comRes = int_attrDataToFilter - intFilterValue;
                 break;
             }
             case TypeReal: {
-                memcpy(&float_attrDataToFilter, (char *) attrDataToFilter + 1, sizeof(float));
+                memcpy(&float_attrDataToFilter, (char *) attrVal + 1, sizeof(float));
                 memcpy(&floatFilterValue, this->filterValue, sizeof(float));
                 if (float_attrDataToFilter > floatFilterValue &&
                     fabs(float_attrDataToFilter - floatFilterValue) > 1E-6) { comRes = 1; }
@@ -905,8 +914,8 @@ namespace PeterDB {
             case TypeVarChar: {
                 int filterValue_varcharLen = 0, fieldLen = 0;
                 memcpy(&filterValue_varcharLen, this->filterValue, sizeof(int));
-                memcpy(&fieldLen, (char *) attrDataToFilter + 1, sizeof(int));
-                string dataToFilter((char *) attrDataToFilter + 1 + sizeof(int), fieldLen);
+                memcpy(&fieldLen, (char *) attrVal + 1, sizeof(int));
+                string dataToFilter((char *) attrVal + 1 + sizeof(int), fieldLen);
                 string filteVal((char *) this->filterValue + sizeof(int), filterValue_varcharLen);
                 comRes = strcmp(dataToFilter.c_str(), filteVal.c_str());
                 break;
@@ -945,7 +954,7 @@ namespace PeterDB {
                 break;
             }
         }
-        free(attrDataToFilter);
+//        free(attrVal);
         return isRecordSatisfied;
     }
 
