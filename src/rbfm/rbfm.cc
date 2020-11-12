@@ -190,7 +190,7 @@ namespace PeterDB {
 
     int RecordBasedFileManager::encodeRecordData_returnSlotLength(const std::vector<Attribute> &recordDescriptor,
                                                                   const void *data, void *encodedData) {
-        this->printRecord(recordDescriptor, data, std::cout);
+//        this->printRecord(recordDescriptor, data, std::cout);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         int nullIndicatorNum = ceil((double) attrNum / CHAR_BIT);
         char *nullIndicatorStr = (char *) malloc(nullIndicatorNum);
@@ -757,8 +757,8 @@ namespace PeterDB {
 
         char pageData[PAGE_SIZE];
         char lastData[PAGE_SIZE];
-        if((getTheCurrentData(rid, lastData) != 0) || isIteratorNew) {
-            isIteratorNew = true;
+        if((getTheCurrentData(rid, lastData) != 0)){isIteratorNew = true;}
+        if(isIteratorNew) {
             rid.slotNum = 0;
             rid.pageNum = 0;
         }
@@ -801,7 +801,6 @@ namespace PeterDB {
 
     int RBFM_ScanIterator::getTheCurrentData(RID rid, void *data) {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
-
         if (rid.pageNum >= iteratorHandle.getNumberOfPages()) {
             return -1;
         }

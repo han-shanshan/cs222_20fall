@@ -425,7 +425,7 @@ namespace PeterDBTesting {
         createLargeTable(tableName);
 
         inBuffer = malloc(bufSize);
-        int numTuples = 1;
+        int numTuples = 5000;
 
         // GetAttributes
         ASSERT_EQ(rm.getAttributes(tableName, attrs), success) << "RelationManager::getAttributes() should succeed.";
@@ -623,7 +623,7 @@ namespace PeterDBTesting {
         // Functions Tested for large tables
         // 1. scan
 
-//        destroyFile = true;   // To clean up after test.
+        destroyFile = true;   // To clean up after test.
 
         std::vector<std::string> attrs{
                 "attr29", "attr15", "attr25"
@@ -809,9 +809,9 @@ namespace PeterDBTesting {
         ASSERT_EQ(rm.getAttributes("Tables", attrs), success) << "RelationManager::getAttributes() should succeed.";
 
 
-        // There should be at least three attributes: table-id, table-fileName, file-fileName
+        // There should be at least three attributes: table-id, table-name, file-name
         ASSERT_GE(attrs.size(), 3) << "Tables table should have at least 3 attributes.";
-        ASSERT_FALSE(attrs[0].name != "table-id" || attrs[1].name != "table-fileName" || attrs[2].name != "file-fileName")
+        ASSERT_FALSE(attrs[0].name != "table-id" || attrs[1].name != "table-name" || attrs[2].name != "file-name")
                                     << "Tables table's schema is not correct.";
 
         PeterDB::RID rid;
@@ -831,10 +831,10 @@ namespace PeterDBTesting {
         int count = 0;
 
         // Check Tables table
-        checkCatalog("table-id: x, table-fileName: Tables, file-fileName: Tables");
+        checkCatalog("table-id: x, table-name: Tables, file-name: Tables");
 
         // Check Columns table
-        checkCatalog("table-id: x, table-fileName: Columns, file-fileName: Columns");
+        checkCatalog("table-id: x, table-name: Columns, file-name: Columns");
 
         // Keep scanning the remaining records
         memset(outBuffer, 0, bufSize);
@@ -861,9 +861,9 @@ namespace PeterDBTesting {
         ASSERT_EQ(rm.getAttributes("Columns", attrs), success)
                                     << "RelationManager::getAttributes() should succeed.";
 
-        // There should be at least five attributes: table-id, column-fileName, column-type, column-length, column-position
+        // There should be at least five attributes: table-id, column-name, column-type, column-length, column-position
         ASSERT_GE(attrs.size(), 5) << "Columns table should have at least 5 attributes.";
-        ASSERT_FALSE(attrs[0].name != "table-id" || attrs[1].name != "column-fileName" ||
+        ASSERT_FALSE(attrs[0].name != "table-id" || attrs[1].name != "column-name" ||
                      attrs[2].name != "column-type" || attrs[3].name != "column-length" ||
                      attrs[4].name != "column-position") << "Columns table's schema is not correct.";
 
@@ -880,19 +880,19 @@ namespace PeterDBTesting {
                                     << "RelationManager::scan() should succeed.";
 
         // Check Tables table
-        checkCatalog("table-id: x, column-fileName: table-id, column-type: 0, column-length: 4, column-position: 1");
-        checkCatalog("table-id: x, column-fileName: table-fileName, column-type: 2, column-length: 50, column-position: 2");
-        checkCatalog("table-id: x, column-fileName: file-fileName, column-type: 2, column-length: 50, column-position: 3");
+        checkCatalog("table-id: x, column-name: table-id, column-type: 0, column-length: 4, column-position: 1");
+        checkCatalog("table-id: x, column-name: table-name, column-type: 2, column-length: 50, column-position: 2");
+        checkCatalog("table-id: x, column-name: file-name, column-type: 2, column-length: 50, column-position: 3");
 
         // Check Columns table
-        checkCatalog("table-id: x, column-fileName: table-id, column-type: 0, column-length: 4, column-position: 1");
+        checkCatalog("table-id: x, column-name: table-id, column-type: 0, column-length: 4, column-position: 1");
         checkCatalog(
-                "table-id: x, column-fileName: column-fileName, column-type: 2, column-length: 50, column-position: 2");
-        checkCatalog("table-id: x, column-fileName: column-type, column-type: 0, column-length: 4, column-position: 3");
+                "table-id: x, column-name: column-name, column-type: 2, column-length: 50, column-position: 2");
+        checkCatalog("table-id: x, column-name: column-type, column-type: 0, column-length: 4, column-position: 3");
         checkCatalog(
-                "table-id: x, column-fileName: column-length, column-type: 0, column-length: 4, column-position: 4");
+                "table-id: x, column-name: column-length, column-type: 0, column-length: 4, column-position: 4");
         checkCatalog(
-                "table-id: x, column-fileName: column-position, column-type: 0, column-length: 4, column-position: 5");
+                "table-id: x, column-name: column-position, column-type: 0, column-length: 4, column-position: 5");
 
 
         // Keep scanning the remaining records
