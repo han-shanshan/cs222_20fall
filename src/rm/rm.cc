@@ -101,7 +101,7 @@ namespace PeterDB {
         int fileNameLen = 0;
         int res = 0;
         char tempData[PAGE_SIZE];
-        iterator.isIteratorNew = true;
+//        iterator.isIteratorNew = true;
         while (iterator.getNextRecord(rid, tempData) != RM_EOF) {
             memcpy(&fileNameLen, (char*)tempData + 1, sizeof(int));
             string fileName((char*)tempData + 1 + sizeof(int), fileNameLen);

@@ -744,26 +744,26 @@ namespace PeterDB {
 
     RC RBFM_ScanIterator::getNextRecord(RID &rid, void *data) {
         char pageData[PAGE_SIZE];
-
+        int slotTableLen = 0;
+        int slotCounter = 0;
+        int offset = 0, length = 0;
+        char currentData[PAGE_SIZE];
         while ((lastRID.pageNum < iteratorHandle.getNumberOfPages())) {
             if (iteratorHandle.readPage(lastRID.pageNum, pageData) == EOF) { return EOF; }
-
-            int slotCounter =
-                    RecordBasedFileManager::instance().getSlotTableLength(pageData) / (2 * SLOT_TABLE_FIELD_LEN);
+            slotTableLen = RecordBasedFileManager::instance().getSlotTableLength(pageData);
+            slotCounter = slotTableLen/ (2 * SLOT_TABLE_FIELD_LEN);
 
             while (lastRID.slotNum < slotCounter) {
-                int offset, length;
-                RecordBasedFileManager::instance().getOffsetAndLengthUsingSlotNum(lastRID.slotNum, pageData,
-                                                                                  RecordBasedFileManager::instance().getSlotTableLength(
-                                                                                          pageData),
+                RecordBasedFileManager::instance().getOffsetAndLengthUsingSlotNum(lastRID.slotNum, pageData, slotTableLen,
                                                                                   offset, length);
                 if (offset >= 0 && length < 0) {
                     lastRID.slotNum++;
                     continue;
                 }
-                if (getTheCurrentData(lastRID, data) == 0) {
+                if (getTheCurrentData(lastRID, currentData) == 0) {
                     rid = lastRID;
                     lastRID.slotNum++;
+                    memcpy(data, currentData, 300);
                     return 0;
                 } else {
                     lastRID.slotNum++;
@@ -805,7 +805,7 @@ namespace PeterDB {
                     if ((strcmp(attrName.c_str(), attr.name.c_str()) == 0)) {
 //                        nullFieldsIndicator[0] | (1 << 7)
                         int attrValOffset = 1;
-                        if (attrVal[0] & (1 << 7) == 1) {
+                        if (attrVal[0] >> 7) {
                             memcpy((char *) encodedFilteredData + encodedDataOffset, &fieldLen_null, INT_FIELD_LEN);
                             encodedDataOffset += INT_FIELD_LEN;
                             break;
