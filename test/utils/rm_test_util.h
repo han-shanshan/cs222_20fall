@@ -56,10 +56,10 @@ namespace PeterDBTesting {
         void TearDown() override {
 
             // Destruct the buffers
-            free(inBuffer);
-            free(outBuffer);
-            free(nullsIndicator);
-            free(nullsIndicatorWithNull);
+//            free(inBuffer);
+//            free(outBuffer);
+//            free(nullsIndicator);
+//            free(nullsIndicatorWithNull);
 
             if (destroyFile) {
                 // Destroy the file
