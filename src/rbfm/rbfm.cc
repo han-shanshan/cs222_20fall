@@ -66,7 +66,6 @@ namespace PeterDB {
         bool isPageFound = false;
         char pageData[PAGE_SIZE];
         void *slotTable;
-        char *oldSlotTable;
         int offset4NewRecord = 0, slotTableLen = 0;
         int freeSpc = -1;
         for (int i = 0; i < numOfPages; i++) {
@@ -77,7 +76,7 @@ namespace PeterDB {
             freeSpc = getFreeSpc(pageData);
             if (freeSpc >= positiveSlotLength) {
                 rid.pageNum = i;
-                oldSlotTable = (char *) malloc(slotTableLen + 2 * INT_FIELD_LEN);
+                char oldSlotTable[slotTableLen + 2 * INT_FIELD_LEN];
                 memcpy(oldSlotTable, (char *) pageData + PAGE_SIZE - slotTableLen - 2 * INT_FIELD_LEN,
                        slotTableLen); //old slot table
                 //find empty slot
@@ -121,7 +120,7 @@ namespace PeterDB {
                     free(slotTable);
                     break;
                 }
-                free(oldSlotTable);
+//                free(oldSlotTable);
             }
         }
 
@@ -269,7 +268,7 @@ namespace PeterDB {
     int RecordBasedFileManager::decodeData(const std::vector<Attribute> &recordDescriptor, void *data,
                                            const void *encodedData) {
         int nullFieldsIndicatorActualSize = ceil((double) recordDescriptor.size() / CHAR_BIT);
-        char *nullFieldsIndicator = (char *) malloc(nullFieldsIndicatorActualSize);
+        char nullFieldsIndicator [nullFieldsIndicatorActualSize];
         memset(nullFieldsIndicator, 0, nullFieldsIndicatorActualSize);
         int fieldLen = 0;
         int encodedDataOffset = 0, offset = nullFieldsIndicatorActualSize;
@@ -288,8 +287,7 @@ namespace PeterDB {
                 encodedDataOffset += fieldLen;
             }
         }
-        memcpy((char *) data, nullFieldsIndicator, nullFieldsIndicatorActualSize);
-        free(nullFieldsIndicator);
+        memcpy((char *) data, &nullFieldsIndicator, nullFieldsIndicatorActualSize);
     }
 
 
@@ -467,7 +465,7 @@ namespace PeterDB {
     int RecordBasedFileManager::getNullIndicatorStr(const vector<Attribute> &recordDescriptor, const void *data,
                                                     unsigned char *&nullIndicatorStr) const {
         int nullIndicatorNum = ceil(1.0 * recordDescriptor.size() / CHAR_BIT);
-        int attrNum = recordDescriptor.size(); //NUM of attributes
+//        int attrNum = recordDescriptor.size(); //NUM of attributes
         nullIndicatorStr = (unsigned char *) malloc(nullIndicatorNum);
         memcpy(nullIndicatorStr, data, nullIndicatorNum);
         return nullIndicatorNum;
@@ -494,14 +492,13 @@ namespace PeterDB {
                 } else { //  TypeVarChar
                     int varcharLen = 0;
                     memcpy(&varcharLen, (char *) data + offset, sizeof(int));
-                    void *strValue = (char *) malloc(varcharLen);
+                    char strValue[varcharLen];
                     offset += sizeof(int);
                     memcpy(strValue, (char *) data + offset, varcharLen);
                     offset += varcharLen;
                     out << "    " << recordDescriptor[i].name << ": ";//
                     printStr(varcharLen, (char *) strValue, out);
 //                cout<<endl;
-                    free(strValue);
                 }
             } else { out << recordDescriptor[i].name << ": NULL"; }
             if (i < recordDescriptor.size() - 1) { out << ", "; }
