@@ -737,7 +737,7 @@ namespace PeterDB {
         int slotTableLen = 0;
         int slotCounter = 0;
         int offset = 0, length = 0;
-        char currentData[PAGE_SIZE];
+//        char currentData[PAGE_SIZE];
         while ((lastRID.pageNum < iteratorHandle.getNumberOfPages())) {
             if (iteratorHandle.readPage(lastRID.pageNum, pageData) == EOF) { return EOF; }
             slotTableLen = RecordBasedFileManager::instance().getSlotTableLength(pageData);
@@ -750,10 +750,9 @@ namespace PeterDB {
                     lastRID.slotNum++;
                     continue;
                 }
-                if (getTheCurrentData(lastRID, currentData) == 0) {
+                if (getTheCurrentData(lastRID, data) == 0) {
                     rid = lastRID;
                     lastRID.slotNum++;
-                    memcpy(data, currentData, 300);
                     return 0;
                 } else {
                     lastRID.slotNum++;
