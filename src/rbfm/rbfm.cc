@@ -953,8 +953,8 @@ namespace PeterDB {
     RC RBFM_ScanIterator::close() {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
         rbfm.closeFile(this->iteratorHandle);
-        vector<Attribute>().swap(selectedRecordDescriptor);
-        vector<Attribute>().swap(recordDescriptor);
+//        vector<Attribute>().swap(selectedRecordDescriptor);
+//        vector<Attribute>().swap(recordDescriptor);
 
         return 0;
     }
