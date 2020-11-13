@@ -83,11 +83,11 @@ namespace PeterDBTesting {
             // Destruct the buffers
 //            free(inBuffer);
 //            free(outBuffer);
-//            free(nullsIndicator);
-//            free(nullsIndicatorWithNull);
+            free(nullsIndicator);
+            free(nullsIndicatorWithNull);
 //
-//            // Close the iterator
-//            ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
+            // Close the iterator
+            ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
 //
 //            if (destroyFile) {
 //                // Destroy the file
