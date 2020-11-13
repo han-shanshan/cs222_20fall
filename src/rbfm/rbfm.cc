@@ -225,7 +225,8 @@ namespace PeterDB {
     RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                           const RID &rid, void *data) {
         char pageData[PAGE_SIZE];
-        fileHandle.readPage(rid.pageNum, pageData);
+        if (fileHandle.readPage(rid.pageNum, pageData) != 0) return -1;
+
         int slotTableLen = getSlotTableLength(pageData);
         int offset = 0, length = 0;
         char encodedData[PAGE_SIZE];
@@ -297,7 +298,8 @@ namespace PeterDB {
         char oldPageData[PAGE_SIZE];
         fileHandle.readPage(rid.pageNum, oldPageData);
         int slotTableLen = getSlotTableLength(oldPageData);
-        if (slotTableLen <= 0) { return -1; }//cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
+        if (slotTableLen <=
+            0) { return -1; }//cout << "Fail to delete the record: the length of the slot table <=0. " << endl;
         int offset = 0, length = 0;
         getOffsetAndLengthUsingSlotNum(rid.slotNum, oldPageData, slotTableLen, offset,
                                        length); // get the offset and the length of the deleted slot
@@ -306,8 +308,10 @@ namespace PeterDB {
 //      length: -slot id - 1. //avoid slot id = 0
 //      old page: offset < 0, length < 0: direct to other page
 //      directed page: offset >= 0, length < 0: the record is an updated record from other page, so no need to count for this page
-        if (offset >= 0 && length < 0) { length = -length; }  //cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
-        if (offset == 0 && length == 0) { return -1; }  //cout << "Fail to delete: the record has already been deleted" << endl;
+        if (offset >= 0 && length <
+                           0) { length = -length; }  //cout << "Fail to delete: this record does not belong to page " << rid.pageNum << endl;
+        if (offset == 0 &&
+            length == 0) { return -1; }  //cout << "Fail to delete: the record has already been deleted" << endl;
         char newPageData[PAGE_SIZE];
 //      delete the record
         if (offset >= 0 && length > 0) {//record in the current page
@@ -495,7 +499,7 @@ namespace PeterDB {
                     memcpy(strValue, (char *) data + offset, varcharLen);
                     offset += varcharLen;
                     out << "    " << recordDescriptor[i].name << ": ";//
-                    printStr(varcharLen, (char*)strValue, out);
+                    printStr(varcharLen, (char *) strValue, out);
 //                cout<<endl;
                     free(strValue);
                 }
@@ -709,11 +713,22 @@ namespace PeterDB {
                 }
             }
         }
-        for (int i = 0; i < recordDescriptor.size(); i++) {
-            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
-                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
+
+
+        for (string attrName: attributeNames) {
+            for (Attribute attr: recordDescriptor) {
+                if ((strcmp(attrName.c_str(), attr.name.c_str()) == 0)) {
+                    rbfm_ScanIterator.selectedRecordDescriptor.push_back(attr);
+                }
             }
+
         }
+
+//        for (int i = 0; i < recordDescriptor.size(); i++) {
+//            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
+//                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
+//            }
+//        }
         this->openFile(fileHandle.fileName, rbfm_ScanIterator.iteratorHandle);
 //        rbfm_ScanIterator.iteratorHandle = fileHandle;
         rbfm_ScanIterator.attributeNames = attributeNames;
@@ -730,71 +745,51 @@ namespace PeterDB {
             }
         }
 
+        rbfm_ScanIterator.lastRID.slotNum = 0;
+        rbfm_ScanIterator.lastRID.pageNum = 0;
+
         return 0;
     }
 
 
     RC RBFM_ScanIterator::getNextRecord(RID &rid, void *data) {
-        RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
-        RC readPage_res, read_res = -1;
-
         char pageData[PAGE_SIZE];
-//        char lastData[PAGE_SIZE];
-//        if((getTheCurrentData(rid, lastData) != 0)){isIteratorNew = true;}
-        if(isIteratorNew) {
-            rid.slotNum = 0;
-            rid.pageNum = 0;
-//            lastRID.pageNum = rid.pageNum;
-//            lastRID.slotNum = rid.slotNum;
-        }
-        if(lastRID.pageNum != rid.pageNum || lastRID.slotNum != rid.slotNum) {
-            isIteratorNew = true;
-            rid.slotNum = 0;
-            rid.pageNum = 0;
-        }
-//        if(isIteratorNew) {
-//            rid.slotNum = 0;
-//            rid.pageNum = 0;
-////            lastRID.pageNum = rid.pageNum;
-////            lastRID.slotNum = rid.slotNum;
-//        }
-        while ((rid.pageNum < iteratorHandle.getNumberOfPages())) {
-//        cout<<"iteratorHandle.getNumberOfPages = "<<iteratorHandle.getNumberOfPages();
-            readPage_res = iteratorHandle.readPage(rid.pageNum, pageData);
-            if (readPage_res != 0) { break; }
-            int slotCounter = rbfm.getSlotTableLength(pageData) / (2 * SLOT_TABLE_FIELD_LEN);
-            char currentData[PAGE_SIZE];
-            while ((read_res == -1) && (rid.slotNum < slotCounter - 1)) {
-                if(!isIteratorNew) {
-                    rid.slotNum++;
-                }else {isIteratorNew = false;}
-                read_res = getTheCurrentData(rid, currentData);
+
+        while ((lastRID.pageNum < iteratorHandle.getNumberOfPages())) {
+            if (iteratorHandle.readPage(lastRID.pageNum, pageData) == EOF) { return EOF; }
+
+            int slotCounter =
+                    RecordBasedFileManager::instance().getSlotTableLength(pageData) / (2 * SLOT_TABLE_FIELD_LEN);
+
+            while (lastRID.slotNum < slotCounter) {
+                int offset, length;
+                RecordBasedFileManager::instance().getOffsetAndLengthUsingSlotNum(lastRID.slotNum, pageData, RecordBasedFileManager::instance().getSlotTableLength(pageData),
+                                                                                  offset, length);
+                if (offset >= 0 && length < 0) {
+                    lastRID.slotNum++;
+                    continue;
+                }
+                if (getTheCurrentData(lastRID, data) == 0) {
+                    rid = lastRID;
+                    lastRID.slotNum++;
+                    return 0;
+                } else {
+                    lastRID.slotNum++;
+                }
             }
-            if (read_res == 0) {
-                memcpy(data, currentData, 300);
-                lastRID.pageNum = rid.pageNum;
-                lastRID.slotNum = rid.slotNum;
-                break;
-            }
-            rid.pageNum++;
-            rid.slotNum = 0;
+            // move to next page
+            lastRID.pageNum++;
+            lastRID.slotNum = 0;
         }
-        if(read_res != 0) {this->isIteratorNew = true;}
-        return read_res;
+        return EOF;
     }
 
-//    void RBFM_ScanIterator::setIterator(RBFM_ScanIterator &iterator, RID &rid) const {
-//        rid.slotNum = 0;
-//        rid.pageNum = 0;
-//        iterator.isIteratorNew = true;
-//    }
 
-
-    int RBFM_ScanIterator::getTheCurrentData(RID rid, void *data) {
+    int RBFM_ScanIterator::getTheCurrentData(const RID &rid, void *data) {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
-        if (rid.pageNum >= iteratorHandle.getNumberOfPages()) {
-            return -1;
-        }
+//        if (rid.pageNum >= iteratorHandle.getNumberOfPages()) {
+//            return -1;
+//        }
         char notFilteredData[PAGE_SIZE];
         if (rbfm.readRecord(iteratorHandle, recordDescriptor, rid, notFilteredData) != 0) {
             return -1; //fail to read the record
@@ -803,34 +798,39 @@ namespace PeterDB {
         char encodedNotFilteredData[PAGE_SIZE];
         //判断是否满足filter条件，如果不满足，则set read_res to -1
         rbfm.encodeRecordData_returnSlotLength(recordDescriptor, notFilteredData, encodedNotFilteredData);
-//rbfm.printEncodedRecord(recordDescriptor, encodedNotFilteredData);
         //add filter. 如果没有通过filter则set read_res to -1
         int read_res = 0;
-
         if (!this->getIsRecordSatisfied(encodedNotFilteredData)) { read_res = -1; }
         else {
             int fieldLen = 0;
-            int encodedNotFilteredDataOffset = 0;
             int encodedDataOffset = 0;
             char encodedFilteredData[PAGE_SIZE];
-            for (auto &i : recordDescriptor) {
-                memcpy(&fieldLen, (char *) encodedNotFilteredData + encodedNotFilteredDataOffset, sizeof(int));
-                encodedNotFilteredDataOffset += sizeof(int);
-                if (isDescriptorRequired(attributeNames, i.name)) {
-                    memcpy((char *) encodedFilteredData + encodedDataOffset, &fieldLen, sizeof(int));
-                    encodedDataOffset += sizeof(int);
-                    if (fieldLen != -1) { //not null
-                        memcpy((char *) encodedFilteredData + encodedDataOffset,
-                               (char *) encodedNotFilteredData + encodedNotFilteredDataOffset, fieldLen);
+            char attrVal[PAGE_SIZE];
+            int fieldLen_null = -1;
+            for (string &attrName: attributeNames) {
+                rbfm.readAttributeFromEncodeData(recordDescriptor, attrName, encodedNotFilteredData, attrVal);
+                for (Attribute &attr: recordDescriptor) {
+                    if ((strcmp(attrName.c_str(), attr.name.c_str()) == 0)) {
+//                        nullFieldsIndicator[0] | (1 << 7)
+                        int attrValOffset = 1;
+                        if (attrVal[0] & (1 << 7) == 1) {
+                            memcpy((char *) encodedFilteredData + encodedDataOffset, &fieldLen_null, INT_FIELD_LEN);
+                            encodedDataOffset += INT_FIELD_LEN;
+                            break;
+                        } else if (attr.type == TypeInt || attr.type == TypeReal) { fieldLen = INT_FIELD_LEN; }
+                        else {
+                            memcpy(&fieldLen, (char *) attrVal + attrValOffset, sizeof(int));
+                            attrValOffset += INT_FIELD_LEN;
+                        }
+                        memcpy((char *) encodedFilteredData + encodedDataOffset, &fieldLen, sizeof(int));
+                        encodedDataOffset += sizeof(int);
+                        memcpy((char *) encodedFilteredData + encodedDataOffset, (char *) attrVal + attrValOffset,
+                               fieldLen);
                         encodedDataOffset += fieldLen;
-                        encodedNotFilteredDataOffset += fieldLen;
+                        break;
                     }
-                } else if (fieldLen != -1) {
-                    encodedNotFilteredDataOffset += fieldLen;
-
                 }
             }
-//            std::stringstream stream;
             rbfm.decodeData(selectedRecordDescriptor, data, encodedFilteredData);
         }
         return read_res;
@@ -876,7 +876,8 @@ namespace PeterDB {
             return true;
         }
         char attrVal[PAGE_SIZE];
-        rbfm.readAttributeFromEncodeData(recordDescriptor, conditionAttributeAttr.name, encodedNotFilteredData, attrVal);
+        rbfm.readAttributeFromEncodeData(recordDescriptor, conditionAttributeAttr.name, encodedNotFilteredData,
+                                         attrVal);
 
         char *nullFieldsIndicator = (char *) malloc(1);
         memcpy(nullFieldsIndicator, attrVal, 1);
