@@ -411,7 +411,7 @@ namespace PeterDBTesting {
 
         destroyFile = false; // the table is already deleted.
         cout<<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"<<endl;
-        test = fasle;
+        test = false;
 
     }
 
