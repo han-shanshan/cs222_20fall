@@ -364,8 +364,6 @@ namespace PeterDBTesting {
             ages.erase(target);
         }
         cout<<"cccccccccccccccccccccccccccccccccccccccccccccccc"<<endl;
-        destroyFile = false;
-        test = false;
     }
 
     TEST_F(RM_Scan_Test, simple_scan_after_table_deletion) {
@@ -389,7 +387,7 @@ namespace PeterDBTesting {
 
         ASSERT_EQ(rm.scan(tableName, "", PeterDB::NO_OP, NULL, attributes, rmsi), success)
                                     << "RelationManager::scan() should succeed.";
-        cout<<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"<<endl;
+        cout<<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"<<endl;
 
         while (rmsi.getNextTuple(rid, outBuffer) != RM_EOF) {
             unsigned returnedAge = *(unsigned *) ((uint8_t *) outBuffer + 1);
@@ -402,16 +400,15 @@ namespace PeterDBTesting {
         // Close the iterator
         rmsi.close();
 
-//        // Delete a Table
-//        ASSERT_EQ(rm.deleteTable(tableName), success) << "RelationManager::deleteTable() should succeed.";
-//
-//        // Scan on a deleted table
-//        ASSERT_NE(rm.scan(tableName, "", PeterDB::NO_OP, NULL, attributes, rmsi), success)
-//                                    << "RelationManager::scan() should not succeed on a deleted table.";
+        // Delete a Table
+        ASSERT_EQ(rm.deleteTable(tableName), success) << "RelationManager::deleteTable() should succeed.";
+
+        // Scan on a deleted table
+        ASSERT_NE(rm.scan(tableName, "", PeterDB::NO_OP, NULL, attributes, rmsi), success)
+                                    << "RelationManager::scan() should not succeed on a deleted table.";
 
         destroyFile = false; // the table is already deleted.
         cout<<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"<<endl;
-        test = false;
 
     }
 

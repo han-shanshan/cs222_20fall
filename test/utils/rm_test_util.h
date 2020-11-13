@@ -25,7 +25,6 @@ namespace PeterDBTesting {
         unsigned char *nullsIndicator = nullptr;
         unsigned char *nullsIndicatorWithNull = nullptr;
         bool destroyFile = true;
-        bool test = true;
         PeterDB::RID rid;
         std::vector<PeterDB::Attribute> attrs;
 
@@ -57,16 +56,15 @@ namespace PeterDBTesting {
         void TearDown() override {
 
             // Destruct the buffers
-//            free(inBuffer);
-//            free(outBuffer);
-//            free(nullsIndicator);
-//            free(nullsIndicatorWithNull);
+            free(inBuffer);
+            free(outBuffer);
+            free(nullsIndicator);
+            free(nullsIndicatorWithNull);
 
             if (destroyFile) {
                 // Destroy the file
                 ASSERT_EQ(rm.deleteTable(tableName), success) << "Destroying the file should not fail.";
             }
-
 
             // Delete Catalog
             ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
@@ -83,24 +81,21 @@ namespace PeterDBTesting {
         void TearDown() override {
 
             // Destruct the buffers
-//            free(inBuffer);
-//            free(outBuffer);
-//            free(nullsIndicator);
-//            free(nullsIndicatorWithNull);
+            free(inBuffer);
+            free(outBuffer);
+            free(nullsIndicator);
+            free(nullsIndicatorWithNull);
 
             // Close the iterator
-            if(!test) {
-                ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
-            }
+            ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
+
             if (destroyFile) {
                 // Destroy the file
                 ASSERT_EQ(rm.deleteTable(tableName), success) << "Deleting the table should succeed.";
             }
 
             // Delete Catalog
-            if(!test) {
-                ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
-            }
+            ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
         };
     };
 
