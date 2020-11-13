@@ -65,7 +65,7 @@ namespace PeterDB {
         size_t numOfPages = fileHandle.getNumberOfPages();
         bool isPageFound = false;
         char pageData[PAGE_SIZE];
-        void *slotTable;
+        char slotTable[PAGE_SIZE];
         int offset4NewRecord = 0, slotTableLen = 0;
         int freeSpc = -1;
         for (int i = 0; i < numOfPages; i++) {
@@ -86,7 +86,6 @@ namespace PeterDB {
                     if (tempOffset == 0 && tempLength == 0) {
                         isPageFound = true;
                         rid.slotNum = j;
-                        slotTable = (char *) malloc(slotTableLen);
                         memcpy((char *) slotTable, oldSlotTable, slotTableLen);//old Slot Table
 //                  update slot table
                         offset4NewRecord = PAGE_SIZE - slotTableLen - freeSpc - 2 * INT_FIELD_LEN;
@@ -102,7 +101,6 @@ namespace PeterDB {
                 if (!isPageFound && (2 * SLOT_TABLE_FIELD_LEN) + positiveSlotLength <= freeSpc) {
                     rid.slotNum = slotTableLen / (SLOT_TABLE_FIELD_LEN * 2);
                     isPageFound = true;
-                    slotTable = (char *) malloc(slotTableLen + 2 * (SLOT_TABLE_FIELD_LEN));
                     memcpy((char *) slotTable, oldSlotTable, slotTableLen);//old Slot Table
                     offset4NewRecord = PAGE_SIZE - slotTableLen - freeSpc - 2 * INT_FIELD_LEN;
                     memcpy((char *) slotTable + slotTableLen, &offset4NewRecord, SLOT_TABLE_FIELD_LEN);
@@ -117,10 +115,8 @@ namespace PeterDB {
                     memcpy((char *) pageData + PAGE_SIZE - INT_FIELD_LEN, &freeSpc, sizeof(int));
                     memcpy((char *) pageData + PAGE_SIZE - 2 * INT_FIELD_LEN, &slotTableLen, sizeof(int));
                     fileHandle.writePage(i, pageData);
-                    free(slotTable);
                     break;
                 }
-//                free(oldSlotTable);
             }
         }
 
@@ -130,7 +126,6 @@ namespace PeterDB {
             rid.slotNum = 0;
             freeSpc = PAGE_SIZE - (2 * SLOT_TABLE_FIELD_LEN) - 2 * sizeof(int) - positiveSlotLength;
             memcpy((void *) pageData, encodedData, positiveSlotLength);
-            slotTable = malloc(2 * SLOT_TABLE_FIELD_LEN);
             slotTableLen = 2 * SLOT_TABLE_FIELD_LEN;
             memcpy((char *) slotTable, &initialOffset, SLOT_TABLE_FIELD_LEN);
             memcpy((char *) slotTable + SLOT_TABLE_FIELD_LEN, &slotLength, SLOT_TABLE_FIELD_LEN);
@@ -138,7 +133,6 @@ namespace PeterDB {
             memcpy((char *) pageData + PAGE_SIZE - (SLOT_TABLE_FIELD_LEN), &freeSpc, sizeof(int));
             memcpy((char *) pageData + PAGE_SIZE - (2 * SLOT_TABLE_FIELD_LEN), &slotTableLen, sizeof(int));
             fileHandle.appendPage(pageData);
-            free(slotTable);
         }
         return 0;
     }
@@ -188,7 +182,7 @@ namespace PeterDB {
 //        this->printRecord(recordDescriptor, data, std::cout);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         int nullIndicatorNum = ceil((double) attrNum / CHAR_BIT);
-        char *nullIndicatorStr = (char *) malloc(nullIndicatorNum);
+        char nullIndicatorStr[nullIndicatorNum;
         memcpy(nullIndicatorStr, data, nullIndicatorNum);
         bool isFieldNull = false;
         int offset = 0;
@@ -217,7 +211,6 @@ namespace PeterDB {
                 offset += sizeof(int);
             }
         }
-        free(nullIndicatorStr);
         return offset;
     }
 
