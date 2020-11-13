@@ -182,7 +182,7 @@ namespace PeterDB {
 //        this->printRecord(recordDescriptor, data, std::cout);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         int nullIndicatorNum = ceil((double) attrNum / CHAR_BIT);
-        char nullIndicatorStr[nullIndicatorNum;
+        char nullIndicatorStr[nullIndicatorNum];
         memcpy(nullIndicatorStr, data, nullIndicatorNum);
         bool isFieldNull = false;
         int offset = 0;
