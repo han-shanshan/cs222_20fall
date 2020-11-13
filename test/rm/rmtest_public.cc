@@ -445,6 +445,12 @@ namespace PeterDBTesting {
             rids.emplace_back(rid);
             sizes.emplace_back(size);
         }
+        vector<std::string> A;
+
+        ASSERT_EQ(rm.scan(tableName, "", PeterDB::NO_OP, NULL, A, rmsi), success)
+                                    << "RelationManager::scan() should succeed.";
+
+        while (rmsi.getNextTuple(rid, outBuffer) != RM_EOF) {}
 
         writeRIDsToDisk(rids);
         writeSizesToDisk(sizes);
