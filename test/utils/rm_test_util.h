@@ -81,10 +81,10 @@ namespace PeterDBTesting {
         void TearDown() override {
 
             // Destruct the buffers
-            free(inBuffer);
-            free(outBuffer);
-            free(nullsIndicator);
-            free(nullsIndicatorWithNull);
+//            free(inBuffer);
+//            free(outBuffer);
+//            free(nullsIndicator);
+//            free(nullsIndicatorWithNull);
 
             // Close the iterator
             ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
