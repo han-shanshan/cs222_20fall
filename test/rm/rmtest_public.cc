@@ -364,6 +364,8 @@ namespace PeterDBTesting {
             ages.erase(target);
         }
         cout<<"cccccccccccccccccccccccccccccccccccccccccccccccc"<<endl;
+        destroyFile = false;
+        test = false;
     }
 
     TEST_F(RM_Scan_Test, simple_scan_after_table_deletion) {
@@ -409,6 +411,7 @@ namespace PeterDBTesting {
 
         destroyFile = false; // the table is already deleted.
         cout<<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"<<endl;
+        test = fasle;
 
     }
 

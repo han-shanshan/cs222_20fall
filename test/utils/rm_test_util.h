@@ -25,6 +25,7 @@ namespace PeterDBTesting {
         unsigned char *nullsIndicator = nullptr;
         unsigned char *nullsIndicatorWithNull = nullptr;
         bool destroyFile = true;
+        bool test = true;
         PeterDB::RID rid;
         std::vector<PeterDB::Attribute> attrs;
 
@@ -66,6 +67,7 @@ namespace PeterDBTesting {
                 ASSERT_EQ(rm.deleteTable(tableName), success) << "Destroying the file should not fail.";
             }
 
+
             // Delete Catalog
             ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
         }
@@ -83,8 +85,8 @@ namespace PeterDBTesting {
             // Destruct the buffers
 //            free(inBuffer);
 //            free(outBuffer);
-            free(nullsIndicator);
-            free(nullsIndicatorWithNull);
+//            free(nullsIndicator);
+//            free(nullsIndicatorWithNull);
 
             // Close the iterator
             ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
@@ -95,7 +97,9 @@ namespace PeterDBTesting {
             }
 
             // Delete Catalog
-            ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
+            if(!test) {
+                ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
+            }
         };
     };
 
