@@ -79,7 +79,7 @@ namespace PeterDB {
         std::vector<std::string> attributeNames;
 //        bool isIteratorNew; //用于判断是否需要从0， 0开始读
         RID lastRID;
-
+bool isIteratorNew;
         bool isDescriptorRequired(const std::vector<std::string> &attributeNames, const std::string &name) const;
 
 //    bool getIsRecordSatisfied(const RID &rid, RecordBasedFileManager &rbfm, void *attrDataToFilter, FileHandle handle) const;
@@ -90,6 +90,8 @@ namespace PeterDB {
 
 //        void setIterator(RBFM_ScanIterator &iterator, RID &rid) const;
         bool getIsRecordSatisfied(char *encodedNotFilteredData) const;
+
+//        int getTheCurrentData(RID rid, void *data);
     };
 
     class RecordBasedFileManager {

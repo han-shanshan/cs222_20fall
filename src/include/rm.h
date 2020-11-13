@@ -82,7 +82,7 @@ namespace PeterDB {
     private:
         static RelationManager *_relation_manager;
 
-        Attribute attribute(const std::string &name, AttrType type, int length);
+        Attribute attribute(const std::string name, AttrType type, int length);
 
 //        RC isTableAlreadyExisted(const std::string &tableName) const;
 
@@ -105,7 +105,7 @@ namespace PeterDB {
 //        int prepareDecodedRecord(char *nullFieldsIndicator, std::vector<Attribute> columnDescriptor,
 //                                 std::vector<std::string> attrValues, void *buffer);
 
-        bool isFieldNull(const char *nullFieldsIndicator, int i) const;
+        bool isFieldNull(char *nullFieldsIndicator, int i) const;
 
 //        void getTableIdUsingIterator(const std::vector<Attribute> &recordDescriptor_table,
 //                                     RBFM_ScanIterator &iterator4Table, int &tableId) const;
@@ -127,7 +127,7 @@ namespace PeterDB {
                                    const CompOp compOp, const void *filterValue, const std::string &fileName,
                                    std::vector<Attribute> recordDescriptors);
 
-        int getTableIdUsingTableName(const std::string& tableName);
+        int getTableIdUsingTableName(const std::string tableName);
 
 //        RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
 
