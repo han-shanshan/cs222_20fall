@@ -86,7 +86,6 @@ namespace PeterDB {
         string columnsTableName = COLUMN_CATALOG_FILE;
         FileHandle fileHandle;
         RC rc = rbfm.openFile(tablesTableName, fileHandle);
-//        if(rc != 0){ return 0; } //cout<<"fail to delete the record: the file has already been deleted."<<endl;
         if(rc != 0){ return -1; } //cout<<"fail to delete the record: the file has already been deleted."<<endl;
 
         RBFM_ScanIterator iterator;
@@ -105,16 +104,12 @@ namespace PeterDB {
         while (iterator.getNextRecord(rid, tempData) != RM_EOF) {
             memcpy(&fileNameLen, (char*)tempData + 1, sizeof(int));
             string fileName((char*)tempData + 1 + sizeof(int), fileNameLen);
-//            string tablesTableName = TABLE_CATALOG_FILE; //((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
-//            string columnsTableName = COLUMN_CATALOG_FILE; //((char *)this->filterValue + sizeof(int), filterValue_varcharLen);
-//            if(strcmp(fileName.c_str(), tablesTableName.c_str()) != 0
-//               && strcmp(fileName.c_str(), columnsTableName.c_str()) != 0){
             if(!isSystemTable(fileName)) {
-                rbfm.destroyFile(fileName);
+                if(rbfm.destroyFile(fileName)!= 0) return -1;
             }
         }
         iterator.close();
-        rbfm.closeFile(fileHandle);
+        if(rbfm.closeFile(fileHandle)!= 0) return -1;
         res = rbfm.destroyFile(TABLE_CATALOG_FILE);
         res = rbfm.destroyFile(COLUMN_CATALOG_FILE);
 //        res = rbfm.destroyFile(INDEX_CATALOG_FILE);
