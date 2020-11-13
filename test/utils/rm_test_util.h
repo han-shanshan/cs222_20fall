@@ -81,21 +81,21 @@ namespace PeterDBTesting {
         void TearDown() override {
 
             // Destruct the buffers
-//            free(inBuffer);
-//            free(outBuffer);
+            free(inBuffer);
+            free(outBuffer);
             free(nullsIndicator);
             free(nullsIndicatorWithNull);
-//
+
             // Close the iterator
             ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
-//
-//            if (destroyFile) {
-//                // Destroy the file
-//                ASSERT_EQ(rm.deleteTable(tableName), success) << "Deleting the table should succeed.";
-//            }
-//
-//            // Delete Catalog
-//            ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
+
+            if (destroyFile) {
+                // Destroy the file
+                ASSERT_EQ(rm.deleteTable(tableName), success) << "Deleting the table should succeed.";
+            }
+
+            // Delete Catalog
+            ASSERT_EQ(rm.deleteCatalog(), success) << "Deleting the Catalog should succeed.";
         };
     };
 
