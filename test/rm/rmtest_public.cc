@@ -348,12 +348,14 @@ namespace PeterDBTesting {
             rids[i] = rid;
             memset(inBuffer, 0, 200);
         }
+        cout<<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"<<endl;
 
         // Set up the iterator
         std::vector<std::string> attributes{"age"};
 
         ASSERT_EQ(rm.scan(tableName, "", PeterDB::NO_OP, NULL, attributes, rmsi), success)
                                     << "RelationManager::scan() should succeed.";
+        cout<<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"<<endl;
 
         while (rmsi.getNextTuple(rid, outBuffer) != RM_EOF) {
             unsigned returnedAge = *(unsigned *) ((uint8_t *) outBuffer + 1);
@@ -361,6 +363,7 @@ namespace PeterDBTesting {
             ASSERT_NE(target, ages.end()) << "Returned age is not from the inserted ones.";
             ages.erase(target);
         }
+        cout<<"cccccccccccccccccccccccccccccccccccccccccccccccc"<<endl;
     }
 
     TEST_F(RM_Scan_Test, simple_scan_after_table_deletion) {
@@ -384,6 +387,7 @@ namespace PeterDBTesting {
 
         ASSERT_EQ(rm.scan(tableName, "", PeterDB::NO_OP, NULL, attributes, rmsi), success)
                                     << "RelationManager::scan() should succeed.";
+        cout<<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"<<endl;
 
         while (rmsi.getNextTuple(rid, outBuffer) != RM_EOF) {
             unsigned returnedAge = *(unsigned *) ((uint8_t *) outBuffer + 1);
@@ -391,6 +395,7 @@ namespace PeterDBTesting {
             ASSERT_NE(target, ages.end()) << "Returned age is not from the inserted ones.";
             ages.erase(target);
         }
+        cout<<"cccccccccccccccccccccccccccccccccccccccccccc"<<endl;
 
         // Close the iterator
         rmsi.close();
@@ -403,6 +408,7 @@ namespace PeterDBTesting {
 //                                    << "RelationManager::scan() should not succeed on a deleted table.";
 
         destroyFile = false; // the table is already deleted.
+        cout<<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"<<endl;
 
     }
 
@@ -445,12 +451,6 @@ namespace PeterDBTesting {
             rids.emplace_back(rid);
             sizes.emplace_back(size);
         }
-        vector<std::string> A;
-
-        ASSERT_EQ(rm.scan(tableName, "", PeterDB::NO_OP, NULL, A, rmsi), success)
-                                    << "RelationManager::scan() should succeed.";
-
-        while (rmsi.getNextTuple(rid, outBuffer) != RM_EOF) {}
 
         writeRIDsToDisk(rids);
         writeSizesToDisk(sizes);

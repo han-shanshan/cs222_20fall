@@ -182,7 +182,7 @@ namespace PeterDB {
 //        this->printRecord(recordDescriptor, data, std::cout);
         int attrNum = recordDescriptor.size(); //NUM of attributes
         int nullIndicatorNum = ceil((double) attrNum / CHAR_BIT);
-        char *nullIndicatorStr = (char *) malloc(nullIndicatorNum);
+        char nullIndicatorStr[nullIndicatorNum];
         memcpy(nullIndicatorStr, data, nullIndicatorNum);
         bool isFieldNull = false;
         int offset = 0;
@@ -211,7 +211,6 @@ namespace PeterDB {
                 offset += sizeof(int);
             }
         }
-        free(nullIndicatorStr);
         return offset;
     }
 
@@ -261,7 +260,7 @@ namespace PeterDB {
     int RecordBasedFileManager::decodeData(const std::vector<Attribute> &recordDescriptor, void *data,
                                            const void *encodedData) {
         int nullFieldsIndicatorActualSize = ceil((double) recordDescriptor.size() / CHAR_BIT);
-        char *nullFieldsIndicator = (char *) malloc(nullFieldsIndicatorActualSize);
+        char nullFieldsIndicator[nullFieldsIndicatorActualSize];
         memset(nullFieldsIndicator, 0, nullFieldsIndicatorActualSize);
         int fieldLen = 0;
         int encodedDataOffset = 0, offset = nullFieldsIndicatorActualSize;
@@ -280,8 +279,7 @@ namespace PeterDB {
                 encodedDataOffset += fieldLen;
             }
         }
-        memcpy((char *) data, nullFieldsIndicator, nullFieldsIndicatorActualSize);
-        free(nullFieldsIndicator);
+        memcpy((char *) data, &nullFieldsIndicator, nullFieldsIndicatorActualSize);
     }
 
 
@@ -483,14 +481,13 @@ namespace PeterDB {
                 } else { //  TypeVarChar
                     int varcharLen = 0;
                     memcpy(&varcharLen, (char *) data + offset, sizeof(int));
-                    void *strValue = (char *) malloc(varcharLen);
+                    char strValue[varcharLen];
                     offset += sizeof(int);
                     memcpy(strValue, (char *) data + offset, varcharLen);
                     offset += varcharLen;
                     out << "    " << recordDescriptor[i].name << ": ";//
-                    printStr(varcharLen, (char*)strValue, out);
+                    printStr(varcharLen, (char *) strValue, out);
 //                cout<<endl;
-                    free(strValue);
                 }
             } else { out << recordDescriptor[i].name << ": NULL"; }
             if (i < recordDescriptor.size() - 1) { out << ", "; }
@@ -686,7 +683,6 @@ namespace PeterDB {
         return strcmp(filterAttributeName.c_str(), recordDescriptor[i_recordDescriptorCounter].name.c_str()) == 0;
     }
 
-
     RC RecordBasedFileManager::scan(FileHandle &fileHandle, const std::vector<Attribute> &recordDescriptor,
                                     const std::string &conditionAttribute, const CompOp compOp, const void *value,
                                     const std::vector<std::string> &attributeNames,
@@ -816,7 +812,6 @@ namespace PeterDB {
         }
         return read_res;
     }
-
 
 
     RC RecordBasedFileManager::printEncodedRecord(const std::vector<Attribute> &recordDescriptor, const void *data) {

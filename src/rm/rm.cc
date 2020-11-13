@@ -72,7 +72,7 @@ namespace PeterDB {
     }
 
 
-    Attribute RelationManager::attribute(string name, AttrType type, int length){
+    Attribute RelationManager::attribute(const string &name, AttrType type, int length){
         Attribute attr;
         attr.name = name;
         attr.type = type;
@@ -334,7 +334,7 @@ namespace PeterDB {
     }
 
 //1: null; 0: not null
-    bool RelationManager::isFieldNull(char *nullFieldsIndicator, int i) const {
+    bool RelationManager::isFieldNull(const char *nullFieldsIndicator, int i) const {
         return (nullFieldsIndicator[i / CHAR_BIT] & (1 << (7 - (i % CHAR_BIT))) == 0) == 1;
     }
 
@@ -401,7 +401,7 @@ namespace PeterDB {
         return 0;
     }
 
-    int RelationManager::getTableIdUsingTableName(string tableName) {
+    int RelationManager::getTableIdUsingTableName(const string &tableName) {
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
         int tableId = -1;
