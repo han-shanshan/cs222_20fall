@@ -89,8 +89,9 @@ namespace PeterDBTesting {
 //            free(nullsIndicatorWithNull);
 
             // Close the iterator
-            ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
-
+            if(!test) {
+                ASSERT_EQ(rmsi.close(), success) << "RM_ScanIterator should be able to close.";
+            }
             if (destroyFile) {
                 // Destroy the file
                 ASSERT_EQ(rm.deleteTable(tableName), success) << "Deleting the table should succeed.";
