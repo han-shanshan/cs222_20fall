@@ -701,43 +701,33 @@ namespace PeterDB {
                                     const std::string &conditionAttribute, const CompOp compOp, const void *value,
                                     const std::vector<std::string> &attributeNames,
                                     RBFM_ScanIterator &rbfm_ScanIterator) {
-        //    Attribute conditionAttributeAttr;
-        rbfm_ScanIterator.isIteratorNew = true;
+
         if (compOp == NO_OP) {
             rbfm_ScanIterator.conditionAttributeAttr.length = -1;
             rbfm_ScanIterator.conditionAttributeAttr.name = "";
         } else {
-            for (int j = 0; j < recordDescriptor.size(); j++) {
-                if (strcmp(conditionAttribute.c_str(), recordDescriptor[j].name.c_str()) == 0) {
-                    rbfm_ScanIterator.conditionAttributeAttr = recordDescriptor[j];
+            for (const Attribute &j : recordDescriptor) {
+                if (strcmp(conditionAttribute.c_str(), j.name.c_str()) == 0) {
+                    rbfm_ScanIterator.conditionAttributeAttr = j;
                 }
             }
         }
 
-
-        for (string attrName: attributeNames) {
-            for (Attribute attr: recordDescriptor) {
-                if ((strcmp(attrName.c_str(), attr.name.c_str()) == 0)) {
+        for (const string &attrName: attributeNames) {
+            for (const Attribute &attr: recordDescriptor) {
+                if (attrName == attr.name) {
                     rbfm_ScanIterator.selectedRecordDescriptor.push_back(attr);
                 }
             }
-
         }
 
-//        for (int i = 0; i < recordDescriptor.size(); i++) {
-//            if (rbfm_ScanIterator.isDescriptorRequired(attributeNames, recordDescriptor[i].name)) {
-//                rbfm_ScanIterator.selectedRecordDescriptor.push_back(recordDescriptor[i]);
-//            }
-//        }
-        this->openFile(fileHandle.fileName, rbfm_ScanIterator.iteratorHandle);
-//        rbfm_ScanIterator.iteratorHandle = fileHandle;
+        if (this->openFile(fileHandle.fileName, rbfm_ScanIterator.iteratorHandle) != 0) return -1;
         rbfm_ScanIterator.attributeNames = attributeNames;
         rbfm_ScanIterator.recordDescriptor = recordDescriptor;
         rbfm_ScanIterator.compOp = compOp;
         if (compOp != NO_OP) {
             if (rbfm_ScanIterator.conditionAttributeAttr.type == TypeVarChar) {
                 int varcharLen = 0;
-//                cout<<"value:"<<value<<endl;
                 memcpy(&varcharLen, value, sizeof(int));
                 memcpy(rbfm_ScanIterator.filterValue, value, sizeof(int) + varcharLen);
             } else {
@@ -763,7 +753,9 @@ namespace PeterDB {
 
             while (lastRID.slotNum < slotCounter) {
                 int offset, length;
-                RecordBasedFileManager::instance().getOffsetAndLengthUsingSlotNum(lastRID.slotNum, pageData, RecordBasedFileManager::instance().getSlotTableLength(pageData),
+                RecordBasedFileManager::instance().getOffsetAndLengthUsingSlotNum(lastRID.slotNum, pageData,
+                                                                                  RecordBasedFileManager::instance().getSlotTableLength(
+                                                                                          pageData),
                                                                                   offset, length);
                 if (offset >= 0 && length < 0) {
                     lastRID.slotNum++;
