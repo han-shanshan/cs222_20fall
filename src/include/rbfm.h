@@ -176,6 +176,8 @@ bool isIteratorNew;
 
         void getOffsetAndLengthUsingSlotNum(const int slotNum, const void *pageData, int slotTableLen, int &offset,
                                             int &length) const;
+        int getFreeSpc(void *pageData);
+        void updateFreeSpc(void *pageData, int freeSpc);
 
     protected:
         RecordBasedFileManager();                                                   // Prevent construction
@@ -228,14 +230,14 @@ bool isIteratorNew;
 
         int getLastInteger(void *pageData, int index);
 
-        int getFreeSpc(void *pageData);
+
         void updateLastInteger(void *newPageData, int val, int idx);
         void
         formDataPageAfterUpdate(char *newPageData, const char *pageData, const void *data,
                                 int slotTableLen,
                                 int offset, int length, int newSlotLength, int &freeSpc);
 
-        void updateFreeSpc(void *pageData, int freeSpc);
+
 
         void updateSlotTableLen(void *pageData, int len);
 

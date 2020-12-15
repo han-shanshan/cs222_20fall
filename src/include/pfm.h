@@ -46,6 +46,7 @@ namespace PeterDB {
         unsigned readPageCounter;
         unsigned writePageCounter;
         unsigned appendPageCounter;
+        int root;
         FILE *file;
         std::string fileName;
 

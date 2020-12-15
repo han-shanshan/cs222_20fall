@@ -167,9 +167,9 @@ namespace PeterDB {
  * @return
  */
     int RecordBasedFileManager::getLastInteger(void *pageData, int index) {
-        int slotTableLen = 0;
-        memcpy(&slotTableLen, (char *) pageData + PAGE_SIZE + index * INT_FIELD_LEN, INT_FIELD_LEN);
-        return slotTableLen;
+        int lastInteger = 0;
+        memcpy(&lastInteger, (char *) pageData + PAGE_SIZE + index * INT_FIELD_LEN, INT_FIELD_LEN);
+        return lastInteger;
     }
 
     int RecordBasedFileManager::getFreeSpc(void *pageData) { return getLastInteger(pageData, -1); }

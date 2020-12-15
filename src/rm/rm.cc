@@ -25,7 +25,7 @@ namespace PeterDB {
     RC RelationManager::createCatalog() {
         if(rbfm.isFileExisting(TABLE_CATALOG_FILE)){rbfm.destroyFile(TABLE_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
         if(rbfm.isFileExisting(COLUMN_CATALOG_FILE)){rbfm.destroyFile(COLUMN_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
-//        if(rbfm.isFileExisting(INDEX_CATALOG_FILE)){rbfm.destroyFile(INDEX_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
+        if(rbfm.isFileExisting(INDEX_CATALOG_FILE)){rbfm.destroyFile(INDEX_CATALOG_FILE);} // for test cases: they do not delete system tables after runnning
 //        int res = 0;
         rbfm.createFile(TABLE_CATALOG_FILE);
         rbfm.createFile(COLUMN_CATALOG_FILE);
@@ -38,7 +38,7 @@ namespace PeterDB {
         //Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
         if(createTable(TABLE_CATALOG_FILE, getTablesTableDescriptor()) == 0
            && createTable(COLUMN_CATALOG_FILE, getColumnsTableDescriptor()) == 0
-//           && createSystemTable(INDEXES_TABLE_NAME, getIndexesTableDescriptor()) == 0
+           && createTable(INDEX_CATALOG_FILE, getIndexesTableDescriptor()) == 0
                 ){return 0;}
         else
             return -1;
@@ -112,7 +112,7 @@ namespace PeterDB {
         if(rbfm.closeFile(fileHandle)!= 0) return -1;
         res = rbfm.destroyFile(TABLE_CATALOG_FILE);
         res = rbfm.destroyFile(COLUMN_CATALOG_FILE);
-//        res = rbfm.destroyFile(INDEX_CATALOG_FILE);
+        res = rbfm.destroyFile(INDEX_CATALOG_FILE);
 //        res = rbfm.destroyFile(SYSTEM_FILE_NAME);
 
         // Todo 删除所有index 文件
@@ -123,7 +123,7 @@ namespace PeterDB {
     bool RelationManager::isSystemTable(const string &tableName){
         if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0) {return true;}
         if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0) {return true;}
-//        if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE) == 0) {return true;}
+        if(strcmp(tableName.c_str(), INDEX_CATALOG_FILE) == 0) {return true;}
         return false;
     }
 
@@ -621,7 +621,7 @@ namespace PeterDB {
         this->getAttributes(tableName, recordDescriptor);
         rbfm.scan(fileHandle, recordDescriptor, conditionAttribute, compOp,
                   value, attributeNames, rm_ScanIterator.rbfm_scanner);
-//    rbfm.closeFile(fileHandle);
+//    rbfm.closeFile(fh);
         return 0;
     }
 
