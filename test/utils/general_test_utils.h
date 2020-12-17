@@ -220,22 +220,6 @@ namespace PeterDBTesting {
         return result;
     }
 
-    std::vector<std::string> split(std::string str, const std::string &token) {
-        std::vector<std::string> result;
-        while (!str.empty()) {
-            int index = str.find(token);
-            if (index != std::string::npos) {
-                result.push_back(str.substr(0, index));
-                str = str.substr(index + token.size());
-                if (str.empty())result.emplace_back(str);
-            } else {
-                result.push_back(str);
-                str = "";
-            }
-        }
-        return result;
-    }
-
 } // namespace PeterDBTesting
 
 

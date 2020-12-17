@@ -802,9 +802,9 @@ namespace PeterDB {
 
 
     RC IndexManager::printBTree(IXFileHandle &ixFileHandle, const Attribute &attribute, std::ostream &out) const {
-        if(ixFileHandle.fh.getNumberOfPages() > 1) {out<<"{";}
+//        if(ixFileHandle.fh.getNumberOfPages() > 1) {out<<"{";}
         traverseTree(ixFileHandle, getRoot(ixFileHandle), attribute, 0, out);
-        if(ixFileHandle.fh.getNumberOfPages() > 1) {out<<endl<<"}"<<endl;}
+//        if(ixFileHandle.fh.getNumberOfPages() > 1) {out<<endl<<"}"<<endl;}
         return 0;
     }
 
@@ -859,7 +859,7 @@ namespace PeterDB {
                 offset += sizeof(int);
                 memcpy(&tempSlotNum, (char*)page + offset, sizeof(int));
                 offset += sizeof(int);
-                out<<":[("<<tempPageNum<<","<<tempSlotNum<<")]\"";
+                out<<": [("<<tempPageNum<<","<<tempSlotNum<<")]\"";
                 i++;
             }
             out<<"]}";
@@ -868,7 +868,7 @@ namespace PeterDB {
             recordLen = PAGE_SIZE - freeSpcLen - INT_FIELD_LEN;
             offset = sizeof(int);
             for(i = 0; i < layer; i++){out<<"  ";}
-            out<<"\"keys\":[";
+            out<<"{\"keys\": [";
             int i = 0;
             while(offset < recordLen){
                 memcpy(&leftNode, (char*)page + offset - sizeof(int), sizeof(int));
@@ -898,7 +898,7 @@ namespace PeterDB {
             }
             out<<"],"<<endl;
             for(i = 0; i < layer; i++) {out<<" ";}
-            out<<"\"children\":["<<endl;
+            out<<"\"children\": ["<<endl;
             offset = sizeof(int);
             layer++;
 
@@ -916,7 +916,7 @@ namespace PeterDB {
                 out<<","<<endl;
             }
             traverseTree(ixFileHandle, rightNode, attribute, layer, out);
-            out<<endl<<"]";
+            out<<endl<<"]}";
         }
     }
     IX_ScanIterator::IX_ScanIterator() {
