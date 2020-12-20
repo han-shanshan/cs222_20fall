@@ -34,62 +34,6 @@ namespace PeterDB {
         ixFileHandle.ixAppendPageCounter = 0;
         return pfm.closeFile(ixFileHandle.fh);
     }
-//todo use iterator
-//    RC
-//    IndexManager::insertEntry(IXFileHandle &ixFileHandle, const Attribute &attribute, const void *key, const RID &rid) {
-////        int currentNode = getRoot(ixFileHandle);
-//        SplitInfo splitInfo;
-//        splitInfo.isSplit = false;
-//
-//
-//        int offset = 0, pageNum = 0;
-////        find pos for the inserted entry
-//        IX_ScanIterator ix_ScanIterator;
-//        scan(ixFileHandle, attribute, NULL, key, true, true, ix_ScanIterator);
-////        RC IndexManager::scan(IXFileHandle &ixFileHandle, const Attribute &attribute,
-////                              const void *lowKey, const void *highKey,
-////                              bool lowKeyInclusive, bool highKeyInclusive,
-////                              IX_ScanIterator &ix_ScanIterator)
-//        RID temprid;
-//        while (1) {
-//            if(ix_ScanIterator.getNextEntry(temprid, &key) != 0){break;}
-//        }
-//        int freeSpc_leaf = ix_ScanIterator.freeSpc;
-//        char page[PAGE_SIZE];
-//        if(ixFileHandle.fh.getNumberOfPages() == 0){
-////            todo:
-//        }
-//        if(ixFileHandle.fh.readPage(ix_ScanIterator.currentNode, page)!=0) {return -1;}
-//        if(freeSpc_leaf > getKeyLen((char*)key, attribute)){
-////            todo: form leaf page
-//        }else
-//
-//
-//
-//        int res = insertEntry_inner(ixFileHandle, attribute, key, rid, currentNode, splitInfo);
-//        if(splitInfo.isSplit) { //add new root
-//            cout<<"aaaaaaaa"<<endl;
-//            char newRootPage[PAGE_SIZE];
-//            int promotedKeyLen = sizeof(int);
-//            if(attribute.type == TypeVarChar) {
-//                memcpy(&promotedKeyLen, (char*)splitInfo.promotedPKeyP + sizeof(int), sizeof(int));
-//                promotedKeyLen += sizeof(int);
-//            }
-////        printStr(12, (char*)splitInfo.promotedPKeyP);
-//            memcpy(newRootPage, splitInfo.promotedPKeyP, promotedKeyLen + 2 * sizeof(int));
-//
-//            int freeSpc = PAGE_SIZE - INT_FIELD_LEN - promotedKeyLen - 2 * INT_FIELD_LEN;
-//            updateFreeSpc(newRootPage, freeSpc);
-//            int newRootId = ixFileHandle.fh.getNumberOfPages();
-//            ixFileHandle.fh.root = newRootId;
-//            writeRoot(ixFileHandle, newRootId);
-//            res = ixFileHandle.fh.appendPage(newRootPage);
-//            if(res != 0) {return -1; }
-//            cout<<"split rid: "<<rid.pageNum<<", "<<rid.slotNum<<endl;
-//        }
-//
-//        return res;
-//    }
 
     RC
     IndexManager::insertEntry(IXFileHandle &ixFileHandle, const Attribute &attribute, const void *key, const RID &rid) {
@@ -249,7 +193,7 @@ namespace PeterDB {
         memcpy(firstKeyInTheRightPage, (char*)rightIndexPage + INT_FIELD_LEN, varLen);
         char leftIndexPage2[PAGE_SIZE];
         char rightIndexPage2[PAGE_SIZE];
-        if(compareKey(keyToInsert, firstKeyInTheRightPage, attribute) >= 0) {
+        if(compareValue(keyToInsert, firstKeyInTheRightPage, attribute.type) >= 0) {
             formInterNodePageData(rightIndexPage, attribute, splitInfo, pKeypLen,
                                   PAGE_SIZE - INT_FIELD_LEN - freeSpc_RightIndex, rightIndexPage2);
             memcpy(leftIndexPage2, leftIndexPage, PAGE_SIZE);
@@ -325,7 +269,7 @@ namespace PeterDB {
         while(offset < lenOfTheRecords) {
             tempKeyLen = getKeyLen((char*)page + offset, attribute);
             memcpy(tempKey, (char*)page + offset, tempKeyLen);
-            if(compareKey(tempKey, key_varchar, attribute) > 0) {//加在temp key的前面
+            if(compareValue(tempKey, key_varchar, attribute.type) > 0) {//加在temp key的前面
                 isPosFound = true;
                 break;
             }
@@ -371,7 +315,7 @@ namespace PeterDB {
                 len += sizeof(int);
             }
             memcpy(tempK, (char*)page + offset, len);
-            if((!isKeyNull && compareKey(tempK, (char*)key, attribute) >= 0) || isKeyNull) {
+            if((!isKeyNull && compareValue(tempK, (char *) key, attribute.type) >= 0) || isKeyNull) {
                 memcpy(&subTreePageNum, (char*)page + offset - sizeof(int), sizeof(int));
                 isSubTreeFound = true;
                 break;
@@ -422,7 +366,7 @@ namespace PeterDB {
         memcpy(firstKeyInTheRightPage, rightPage, varLen);
         char rightPageAfterInsert[PAGE_SIZE];
         char leftPageAfterInsert[PAGE_SIZE];
-        if(compareKey((char*)key, firstKeyInTheRightPage, attribute) >= 0) {
+        if(compareValue((char *) key, firstKeyInTheRightPage, attribute.type) >= 0) {
             formLeafNodeData(rightPage, attribute, keyRidPair, keyRidPairLen,
                              record_length_right, rightPageAfterInsert);
             memcpy(leftPageAfterInsert, leftPage, PAGE_SIZE);
@@ -494,7 +438,7 @@ namespace PeterDB {
             }
             tempLen += sizeof(int);
             memcpy(tempKey, (char*)oldPage + offset, tempLen);
-            if(compareKey(key, tempKey, attribute) < 0) {
+            if(compareValue(key, tempKey, attribute.type) < 0) {
                 break;
             }
             offset = offset + tempLen + 2 * sizeof(int);
@@ -512,9 +456,9 @@ namespace PeterDB {
 
 
 
-    int IndexManager::compareKey(void* key1, void *key2, Attribute attribute) const {
+    int IndexManager::compareValue(void* key1, void *key2, AttrType type) const {
         int comp = 0;
-        if(attribute.type == TypeInt) {
+        if(type == TypeInt) {
             int key1_int = -1, key2_int = -1;
             memcpy(&key1_int, key1, sizeof(int));
             memcpy(&key2_int, key2, sizeof(int));
@@ -522,7 +466,7 @@ namespace PeterDB {
             else if(key1_int - key2_int < 0) {comp = -1; }
             else if(key1_int - key2_int == 0) {comp == 0; }
         }
-        else if(attribute.type == TypeReal) {
+        else if(type == TypeReal) {
             float key1_float = 0.0, key2_float = 0.0;
             memcpy(&key1_float, key1, sizeof(int));
             memcpy(&key2_float, key2, sizeof(int));
@@ -532,7 +476,7 @@ namespace PeterDB {
             else if(key1_float > key2_float
                     && fabs(key1_float - key2_float) > 1E-6){comp = 1; }
         }
-        else if (attribute.type == TypeVarChar) {
+        else if (type == TypeVarChar) {
             int len1 = 0, len2 = 0;
             memcpy(&len1, key1, sizeof(int));
             memcpy(&len2, key2, sizeof(int));

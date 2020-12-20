@@ -29,6 +29,7 @@ namespace PeterDB {
 //        int res = 0;
         rbfm.createFile(TABLE_CATALOG_FILE);
         rbfm.createFile(COLUMN_CATALOG_FILE);
+        rbfm.createFile(INDEX_CATALOG_FILE);
 //        int tableTableId = insertIntoTableFile_returnTableID(TABLE_CATALOG_FILE);
 //        insertIntoColumnFile(getTablesTableDescriptor(), tableTableId);
 //        int columnTableId = insertIntoTableFile_returnTableID(TABLE_CATALOG_FILE);
@@ -38,7 +39,7 @@ namespace PeterDB {
         //Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
         if(createTable(TABLE_CATALOG_FILE, getTablesTableDescriptor()) == 0
            && createTable(COLUMN_CATALOG_FILE, getColumnsTableDescriptor()) == 0
-           && createTable(INDEX_CATALOG_FILE, getIndexesTableDescriptor()) == 0
+           && createTable(INDEX_CATALOG_FILE, getIdxTableDescriptor()) == 0
                 ){return 0;}
         else
             return -1;
@@ -62,14 +63,24 @@ namespace PeterDB {
         return tableAttrs;
     }
 
-    vector<Attribute> RelationManager::getIndexesTableDescriptor() {
-        vector<Attribute> indexAttrs;
-        indexAttrs.push_back(attribute("table-id", TypeInt, 4));
-        indexAttrs.push_back(attribute("table-fileName", TypeVarChar, 50));
-        indexAttrs.push_back(attribute("column-pos", TypeInt, 4));
-        indexAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
-        return indexAttrs;
+//    table-name; col-name; idx-file-name
+    vector<Attribute> RelationManager::getIdxTableDescriptor() {
+        vector<Attribute> idxAttrs;
+//        idxAttrs.push_back(attribute("table-id", TypeInt, 4));
+        idxAttrs.push_back(attribute("table-name", TypeVarChar, 50));
+        idxAttrs.push_back(attribute("col-name", TypeVarChar, 50));
+        idxAttrs.push_back(attribute("idx-file-name", TypeVarChar, 50));
+        return idxAttrs;
     }
+
+//    vector<Attribute> RelationManager::getIndexesTableDescriptor() {
+//        vector<Attribute> indexAttrs;
+//        indexAttrs.push_back(attribute("table-id", TypeInt, 4));
+//        indexAttrs.push_back(attribute("table-fileName", TypeVarChar, 50));
+//        indexAttrs.push_back(attribute("column-pos", TypeInt, 4));
+//        indexAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
+//        return indexAttrs;
+//    }
 
 
     Attribute RelationManager::attribute(const string &name, AttrType type, int length){
@@ -250,18 +261,6 @@ namespace PeterDB {
     }
 
 
-//if this table already exists, return 0;
-//    RC RelationManager::isTableAlreadyExisted(const string &tableName) const {
-//        FileHandle tableFileHandle;
-//        bool isTableFileExist = false;
-//        if(rbfm.openFile(tableName, tableFileHandle) == 0){
-//            isTableFileExist = true;
-//        }
-//        rbfm.closeFile(tableFileHandle);
-//        return isTableFileExist;
-//    }
-
-
 /**
  * prepare the encoded record to insert into a table; attrValues type has been converted
  * @param columnDescriptor
@@ -339,19 +338,16 @@ namespace PeterDB {
         if(!rbfm.isFileExisting(tableName)) {
             return -1; //table does not exist
         }
-        RBFM_ScanIterator tableIterator, columnIterator;
-        int tableId = getTableIdUsingTableName(tableName);
+        RBFM_ScanIterator tableIterator, columnIterator, idxIterator;
+        int tableId = getTableIdByName(tableName);
         if(tableId == -1) {return -1; } //cout << "Fail to delete the table." << endl;
         int rc = rbfm.destroyFile(tableName);
         if (rc != 0) return -1;
-        RID tableRid, columnRid;
-//        tableRid.pageNum = 0;
-//        tableRid.slotNum = 0;
-//        columnRid.pageNum = 0;
-//        columnRid.slotNum = 0;
-        vector<Attribute> recordDescriptor_column = getColumnsTableDescriptor();
-        vector<Attribute> recordDescriptor_table = getTablesTableDescriptor();
-        vector<string> attributeNames2;
+        RID rid;
+        vector<Attribute> colDescriptor = getColumnsTableDescriptor();
+        vector<Attribute> tblDescriptor = getTablesTableDescriptor();
+        vector<Attribute> idxDescriptor = getIdxTableDescriptor();
+        vector<string> attrNames;
         FileHandle fileHandle_table;
         string table_catalog_file = TABLE_CATALOG_FILE;
         rbfm.openFile(table_catalog_file, fileHandle_table);
@@ -359,11 +355,11 @@ namespace PeterDB {
         char tempData[PAGE_SIZE];
         memcpy((char*)filterValue, &tableId, sizeof(int));
         //////////////////////////////////delete records in Tables table
-        rbfm.scan(fileHandle_table, recordDescriptor_table, "table-id",
-                  EQ_OP, filterValue, attributeNames2, tableIterator);
-        if (tableIterator.getNextRecord(tableRid, tempData) != RM_EOF) {
+        rbfm.scan(fileHandle_table, tblDescriptor, "table-id",
+                  EQ_OP, filterValue, attrNames, tableIterator);
+        if (tableIterator.getNextRecord(rid, tempData) != RM_EOF) {
 //        cout<<"table rid: "<<tableRid.pageNum<<"-"<<tableRid.slotNum<<endl;
-            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, recordDescriptor_table, tableRid);
+            RC res = rbfm.deleteRecord(tableIterator.iteratorHandle, tblDescriptor, rid);
             if(res != 0) {return -1; }
         }
         tableIterator.close();
@@ -374,29 +370,44 @@ namespace PeterDB {
         string column_catalog_file = COLUMN_CATALOG_FILE;
         rbfm.openFile(column_catalog_file, fileHandle_column);
         //filterValue is also tableId
-        rbfm.scan(fileHandle_column, recordDescriptor_column, "table-id",
-                  EQ_OP, filterValue, attributeNames2, columnIterator);
-        while (columnIterator.getNextRecord(columnRid, tempData) != RM_EOF) {
+        rbfm.scan(fileHandle_column, colDescriptor, "table-id",
+                  EQ_OP, filterValue, attrNames, columnIterator);
+        while (columnIterator.getNextRecord(rid, tempData) != RM_EOF) {
 //            rbfm.printRecord(recordDescriptor_column, tempData, std::cout);
 //            cout<<"columnRid: "<<columnRid.pageNum<<"-"<<columnRid.slotNum<<endl;
-            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, recordDescriptor_column, columnRid);
+            RC res = rbfm.deleteRecord(columnIterator.iteratorHandle, colDescriptor, rid);
             if(res != 0) {return -1;}
         }
         columnIterator.close();
         rbfm.closeFile(fileHandle_column);
-//        vector<Attribute> attrs;
-        // todo:
-//        this->getAttributes(tableName, attrs);
-//        for(int i = 0; i < attrs.size(); i++) {
-//            string indexFileName = getIndexFileName(tableName, attrs[i].name);
-//            if(isTableAlreadyExisted(indexFileName)) {
-//                rbfm.destroyFile(indexFileName);
-//            }
-//        }
+
+        ////////////delete records in Idx table
+        FileHandle idxFH;
+        string idx_file = INDEX_CATALOG_FILE;
+        if(rbfm.openFile(idx_file, idxFH) != 0){return -1;}
+
+//        memcpy((char*)filterValue, &tableId, sizeof(int));
+        constructVarcharFilterValue(tableName, filterValue);
+        attrNames.push_back("idx-file-name");
+        rbfm.scan(idxFH, idxDescriptor, "table-name",
+                  EQ_OP, filterValue, attrNames, idxIterator);
+        vector<Attribute> descriptor;
+        Attribute a;
+        a.type = TypeVarChar;
+        a.length = 50;
+        a.name = "idx-file-name";
+        descriptor.push_back(a);
+        int len = 0;
+        while (idxIterator.getNextRecord(rid, tempData) != RM_EOF) {
+            if(rbfm.deleteRecord(idxIterator.iteratorHandle, idxDescriptor, rid) != 0) {return -1; }
+            if(rbfm.destroyFile((char*)(tempData + 5)) != 0) {return -3;}
+        }
+        idxIterator.close();
+        rbfm.closeFile(idxFH);
         return 0;
     }
 
-    int RelationManager::getTableIdUsingTableName(const string &tableName) {
+    int RelationManager::getTableIdByName(const string &tableName) {
         FileHandle fileHandle_table;
         RBFM_ScanIterator tableIdIterator;
         int tableId = -1;
@@ -439,7 +450,7 @@ namespace PeterDB {
 //    cout<<"table fileName = "<<tableName<<endl;
         char columnPositions4RecordDescriptors[PAGE_SIZE];
         int columnPositions4RecordDescriptors_offset = 0;
-        int tableId = getTableIdUsingTableName(tableName);
+        int tableId = getTableIdByName(tableName);
 //    cout<<"table id = "<<tableId<<endl;
 //    Columns(table-id:int, column-fileName:varchar(50), column-type:int, column-length:int, column-position:int)
 
@@ -532,7 +543,6 @@ namespace PeterDB {
         }
         //-------order
         int tempPosition = 0;
-        Attribute tempAttr;
         //bubble
         for(int i=0;i<size;i++) {
             for(int j=i+1;j<size;j++) {
@@ -625,20 +635,103 @@ namespace PeterDB {
         return 0;
     }
 
+    RC RelationManager::createIndex(const std::string &tableName, const std::string &attributeName){
+        vector<string> idxAttrValues;
+        vector<Attribute> idxTableDescriptor = getIdxTableDescriptor();
+        string idxFileName = getIdxFileName(tableName, attributeName);
+        char buffer[PAGE_SIZE];
+        char nullsIndicator[1];
+        memset(nullsIndicator, 0, 1);//00000000
+        RID idxRid;
+        idxAttrValues.push_back(tableName);
+        idxAttrValues.push_back(attributeName); //attrs[j].type
+        idxAttrValues.push_back(idxFileName);
+        prepareDecodedRecord(nullsIndicator, idxTableDescriptor, idxAttrValues, buffer);
+//            rbfm.printRecord(colTableDescriptor, buffer, std::cout);
+        FileHandle fh;
+        if(rbfm.openFile(INDEX_CATALOG_FILE, fh)!=0){return  -1;}
+        if(rbfm.insertRecord(fh, idxTableDescriptor, buffer, idxRid)!= 0) {return -1;}
+
+        return ix.createFile(idxFileName);
+    }
+
+    string
+    RelationManager::getIdxFileName(const string &tableName, const string &attributeName) const { return tableName + "_" + attributeName + ".idx"; }
+
+    RC RelationManager::destroyIndex(const std::string &tableName, const std::string &attributeName) {
+        RBFM_ScanIterator idxIterator;
+        if(rbfm.destroyFile(getIdxFileName(tableName, attributeName)) != 0){return -1;}
+        RID idxRid;
+        vector<Attribute> recordDescriptor_idx = getIdxTableDescriptor();
+        vector<string> attributeNames;
+        attributeNames.push_back("col-name");
+        FileHandle idxFH;
+        string idx_catalog_file = INDEX_CATALOG_FILE;
+        if(rbfm.openFile(idx_catalog_file, idxFH) != 0){return -1; }
+        char tempData[PAGE_SIZE];
+        char filterValue[PAGE_SIZE]; // sizeof(int) + table fileName
+        constructVarcharFilterValue(tableName, filterValue);
+        //////////////////////////////////delete records in Idx table
+//        table-name; col-name; idx-file-name
+        rbfm.scan(idxFH, recordDescriptor_idx, "table-name",
+                  EQ_OP, filterValue, attributeNames, idxIterator);
+        if (idxIterator.getNextRecord(idxRid, tempData) != RM_EOF) {
+            if(strcmp(attributeName.c_str(), (char*)tempData + INT_FIELD_LEN) == 0){
+                if(rbfm.deleteRecord(idxIterator.iteratorHandle, recordDescriptor_idx, idxRid) != 0) {return -1;}
+            }
+        }
+        idxIterator.close();
+        rbfm.closeFile(idxFH);
+        return 0;
+    }
+
+    void RelationManager::constructVarcharFilterValue(const string &tableName, void *filterValue) const {
+        int tableNameLen = tableName.length();
+        memcpy(filterValue, &tableNameLen, INT_FIELD_LEN);
+        memcpy((char*)filterValue + INT_FIELD_LEN, tableName.c_str(), tableNameLen);
+    }
+
+    // indexScan returns an iterator to allow the caller to go through qualified entries in index
+    RC RelationManager::indexScan(const std::string &tableName,
+                 const std::string &attributeName,
+                 const void *lowKey,
+                 const void *highKey,
+                 bool lowKeyInclusive,
+                 bool highKeyInclusive,
+                 RM_IndexScanIterator &rm_IndexScanIterator) {
+        IXFileHandle ixFileHandle;
+        if(ix.openFile(getIdxFileName(tableName, attributeName), ixFileHandle) != 0){return -1;}
+        IX_ScanIterator ix_ScanIterator;
+        Attribute attribute;
+        attribute.name = attributeName;
+        attribute.type = TypeVarChar;
+        attribute.length = 50;
+        ix.scan(ixFileHandle, attribute, lowKey, highKey, lowKeyInclusive, highKeyInclusive, ix_ScanIterator);
+    }
+
+    RM_IndexScanIterator::RM_IndexScanIterator() = default;
+
+    RM_IndexScanIterator::~RM_IndexScanIterator() = default;
+
+    RC RM_IndexScanIterator::getNextEntry(RID &rid, void *key){
+        return rm_scanner.getNextTuple(rid, key);
+    }
+    RC RM_IndexScanIterator::close(){
+        return rm_scanner.close();
+    }
+
+
     RM_ScanIterator::RM_ScanIterator() = default;
 
     RM_ScanIterator::~RM_ScanIterator() = default;
 
     RC RM_ScanIterator::getNextTuple(RID &rid, void *data) {
-//        rbfm_scanner.setIterator(rbfm_scanner, rid);
-//cout<<"in getNextTuple: "<<endl;
-//        rbfm.printRecord(rbfm_scanner.selectedRecordDescriptor, data, std::cout);
         return rbfm_scanner.getNextRecord(rid, data);
     }
 
+
     RC RM_ScanIterator::close() {
-        this->rbfm_scanner.close();
-        return 0;
+        return rbfm_scanner.close();
     }
 
     // Extra credit work

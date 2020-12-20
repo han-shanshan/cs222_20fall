@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "src/include/rbfm.h"
+#include "src/include/ix.h"
 
 namespace PeterDB {
 #define RM_EOF (-1)  // end of a scan operator
@@ -38,6 +39,7 @@ namespace PeterDB {
         // "key" follows the same format as in IndexManager::insertEntry()
         RC getNextEntry(RID &rid, void *key);    // Get next matching entry
         RC close();                              // Terminate index scan
+        RM_ScanIterator rm_scanner;
     };
 
     // Relation Manager
@@ -45,6 +47,8 @@ namespace PeterDB {
     public:
         static RelationManager &instance();
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
+        IndexManager &ix = IndexManager::instance();
+        PagedFileManager &pfm = PagedFileManager::instance();
 
         RC createCatalog();
 
@@ -115,20 +119,7 @@ namespace PeterDB {
 
         std::vector<Attribute> getColumnsTableDescriptor();
 
-/*
-    int getMaxIntValueInTheFile(const std::string &fileName, std::vector<Attribute> &recordDescriptor,
-                                const std::string &attributeName, RecordBasedFileManager &rbfm);
-
-    int getMaxColumnPositionInTheFile(const std::string &fileName, std::vector<Attribute> &recordDescriptor,
-                                      const std::string &attributeName, RecordBasedFileManager &rbfm,
-                                      const std::string &filterAttributeName, int filterValue);
-
-    int prepareColumnRecord(std::string &nullFieldsIndicator, std::vector<Attribute> columnDescriptor, Attribute attr,
-                            int tableId, int columnPostion, void *buffer);
-                            */
-
-//        int prepareDecodedRecord(char *nullFieldsIndicator, std::vector<Attribute> columnDescriptor,
-//                                 std::vector<std::string> attrValues, void *buffer);
+//        std::vector<Attribute> getIdxTableDescriptor();
 
         bool isFieldNull(const char *nullFieldsIndicator, int i) const;
 
@@ -152,20 +143,20 @@ namespace PeterDB {
                                    const CompOp compOp, const void *filterValue, const std::string &fileName,
                                    std::vector<Attribute> recordDescriptors);
 
-        int getTableIdUsingTableName(const std::string &tableName);
+        int getTableIdByName(const std::string &tableName);
 
 //        RC createSystemTable(const std::string &tableName, const std::vector<Attribute> &attrs);
 
         bool isSystemTable(const std::string &tableName);
 
-        std::vector<Attribute> getIndexesTableDescriptor();
+        std::vector<Attribute> getIdxTableDescriptor();
 
         std::string
         getIndexFileName(const std::string &tableName, const std::string &attributeName) const;
 
         bool isTableEmpty(const std::string &tableName) const;
 
-//        void getTableIdUsingTableName(const vector<Attribute> &recordDescriptor_table, const string &tableName,
+//        void getTableIdByName(const vector<Attribute> &recordDescriptor_table, const string &tableName,
 //                                      int &tableId) const;
         int
         prepareDecodedRecord(char *nullFieldsIndicator, vector<Attribute> columnDescriptor, vector<string> attrValues,
@@ -176,6 +167,9 @@ namespace PeterDB {
 //        int insertIntoTableFile_returnTableID(const string &tableName);
 //
 //        RC insertIntoColumnFile(int tableId);
+        string getIdxFileName(const string &tableName, const string &attributeName) const;
+
+        void constructVarcharFilterValue(const string &tableName, void *filterValue) const;
     };
 
 } // namespace PeterDB

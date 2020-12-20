@@ -74,7 +74,7 @@ namespace PeterDB {
         RC printBTree(IXFileHandle &ixFileHandle, const Attribute &attribute, std::ostream &out) const;
         bool isLeafNode(const void *page, int &freeSpc) const;
         int getFreeSpc(void *page) const ;
-        int compareKey(void* key1, void *key2, Attribute attribute) const;
+        int compareValue(void* key1, void *key2, AttrType type) const;
         int traverseTree(IXFileHandle &ixFileHandle, int node, Attribute attribute, int layer, std::ostream &out) const;
         void updateFreeSpc(void *pageData, int val) const;
         int getNextPageID(void *page) const;

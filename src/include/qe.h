@@ -40,6 +40,10 @@ namespace PeterDB {
         virtual RC getAttributes(std::vector<Attribute> &attrs) const = 0;
 
         virtual ~Iterator() = default;
+
+        RC getDataFieldVal(const void *data, vector<Attribute> attrs, int attrPos, AttrType type, void *output);
+
+        RC getTupleLength(const void *data, vector<Attribute> attrs);
     };
 
     class TableScan : public Iterator {
@@ -160,6 +164,7 @@ namespace PeterDB {
         Filter(Iterator *input,               // Iterator of input R
                const Condition &condition     // Selection condition
         );
+        IndexManager &ix = IndexManager::instance();
 
         ~Filter() override;
 
@@ -167,6 +172,16 @@ namespace PeterDB {
 
         // For attribute in std::vector<Attribute>, name it as rel.attr
         RC getAttributes(std::vector<Attribute> &attrs) const override;
+
+    private:
+        Condition condition;
+        unsigned filterAttrPos;
+        std::vector<Attribute> attrs;
+        Iterator *iterator = nullptr;
+
+        bool getIsValueSatisfied(void *valueToFilter) const;
+
+//    void getValueToFilter(void *data, void *valueToFilter) const;
     };
 
     class Project : public Iterator {
@@ -180,6 +195,12 @@ namespace PeterDB {
 
         // For attribute in std::vector<Attribute>, name it as rel.attr
         RC getAttributes(std::vector<Attribute> &attrs) const override;
+
+        Condition condition;
+//    unsigned filterAttrPos;
+        std::vector<Attribute> selectedAttributes;
+        std::vector<Attribute> attributes;
+        Iterator *iterator = nullptr;
     };
 
     class BNLJoin : public Iterator {
@@ -214,6 +235,32 @@ namespace PeterDB {
 
         // For attribute in std::vector<Attribute>, name it as rel.attr
         RC getAttributes(std::vector<Attribute> &attrs) const override;
+
+        bool isRightEnd = true;
+        Iterator *lIterator;
+        IndexScan *rIterator;
+
+        void *leftValue;
+
+        void *lTuple;
+        void *rTuple;
+
+//    CompOp op;
+//    AttrType type;
+
+        unsigned leftAttrPos;
+        unsigned rightAttrPos;
+
+        std::vector<Attribute> attrs;
+        std::vector<Attribute> leftAttrs;
+        std::vector<Attribute> rightAttrs;
+
+        RC isEnd;
+        bool leftHalf; // for NE_OP;
+//    AttrType type;
+
+        void setCondition(CompOp op, void **lowKey, void **highKey, bool &lowKeyInclusive, bool &highKeyInclusive);
+
     };
 
     // 10 extra-credit points
@@ -250,7 +297,7 @@ namespace PeterDB {
                   const Attribute &aggAttr,           // The attribute over which we are computing an aggregate
                   const Attribute &groupAttr,         // The attribute over which we are grouping the tuples
                   AggregateOp op              // Aggregate operation
-        );
+        ){};
 
         ~Aggregate() override;
 
@@ -260,6 +307,25 @@ namespace PeterDB {
         // E.g. Relation=rel, attribute=attr, aggregateOp=MAX
         // output attrName = "MAX(rel.attr)"
         RC getAttributes(std::vector<Attribute> &attrs) const override;
+
+    private:
+        Iterator *iterator;
+        AggregateOp op;
+        Attribute aggrAttribute;
+        AttrType type;
+        std::vector<Attribute> attributes;
+        int attrPos;
+
+        RC Sum(void *data);
+
+        RC Avg(void *data);
+        RC Count(void *data);
+//    RC Max(void *data);
+//    RC Min(void *data);
+
+        void *setVal(void *minVal, const void *fieldDataVal) const;
+
+        RC extremeValue(void *data, AggregateOp op);
     };
 } // namespace PeterDB
 

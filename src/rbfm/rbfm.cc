@@ -764,9 +764,6 @@ namespace PeterDB {
 
     int RBFM_ScanIterator::getTheCurrentData(const RID &rid, void *data) {
         RecordBasedFileManager &rbfm = RecordBasedFileManager::instance();
-//        if (rid.pageNum >= iteratorHandle.getNumberOfPages()) {
-//            return -1;
-//        }
         char notFilteredData[PAGE_SIZE];
         if (rbfm.readRecord(iteratorHandle, recordDescriptor, rid, notFilteredData) != 0) {
             return -1; //fail to read the record
