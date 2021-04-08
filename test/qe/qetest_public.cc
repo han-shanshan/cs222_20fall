@@ -182,6 +182,7 @@ namespace PeterDBTesting {
             std::stringstream stream;
             ASSERT_EQ(rm.printTuple(attrs, outBuffer, stream), success)
                                         << "RelationManager.printTuple() should succeed.";
+
             printed.emplace_back(stream.str());
             memset(outBuffer, 0, bufSize);
         }
@@ -230,6 +231,7 @@ namespace PeterDBTesting {
         ASSERT_EQ(project.getAttributes(attrs), success) << "Project.getAttributes() should succeed.";
         while (project.getNextTuple(outBuffer) != QE_EOF) {
             // Null indicators should be placed in the beginning.
+            rm.printTuple(attrs, outBuffer, std::cout);
             std::stringstream stream;
             ASSERT_EQ(rm.printTuple(attrs, outBuffer, stream), success)
                                         << "RelationManager.printTuple() should succeed.";
@@ -352,6 +354,7 @@ namespace PeterDBTesting {
         ASSERT_EQ(filter.getAttributes(attrs), success) << "Filter.getAttributes() should succeed.";
         while (filter.getNextTuple(outBuffer) != QE_EOF) {
             std::stringstream stream;
+            rm.printTuple(attrs, outBuffer, std::cout);
             ASSERT_EQ(rm.printTuple(attrs, outBuffer, stream), success)
                                         << "RelationManager.printTuple() should succeed.";
             printed.emplace_back(stream.str());
@@ -538,6 +541,7 @@ namespace PeterDBTesting {
         ASSERT_EQ(agg.getAttributes(attrs), success) << "Aggregate.getAttributes() should succeed.";
         ASSERT_NE(agg.getNextTuple(outBuffer), QE_EOF) << "Aggregate.getNextTuple() should succeed.";
         std::stringstream stream;
+        rm.printTuple(attrs, outBuffer, std::cout);
         ASSERT_EQ(rm.printTuple(attrs, outBuffer, stream), success)
                                     << "RelationManager.printTuple() should succeed.";
         checkPrintRecord("MAX(left.B): 196", stream.str());
@@ -723,7 +727,8 @@ namespace PeterDBTesting {
         outBuffer = malloc(bufSize);
 
         std::string tableName = "group";
-        createAndPopulateTable(tableName, {}, 10000);
+        createAndPopulateTable(tableName, {}, 10);
+//        createAndPopulateTable(tableName, {}, 10000);
 
         // Create TableScan
         PeterDB::TableScan ts(rm, tableName);
@@ -735,6 +740,7 @@ namespace PeterDBTesting {
         std::vector<std::string> printed;
         ASSERT_EQ(agg.getAttributes(attrs), success) << "INLJoin.getAttributes() should succeed.";
         while (agg.getNextTuple(outBuffer) != QE_EOF) {
+            rm.printTuple(attrs, outBuffer, std::cout);
 
             std::stringstream stream;
             ASSERT_EQ(rm.printTuple(attrs, outBuffer, stream), success)

@@ -1,5 +1,5 @@
 #include "src/include/pfm.h"
-
+#include<iostream>
 using namespace std;
 namespace PeterDB {
     PagedFileManager &PagedFileManager::instance() {
@@ -34,6 +34,7 @@ namespace PeterDB {
 
     RC PagedFileManager::destroyFile(const std::string &fileName) {
         if (!isFileExisting(fileName)) { return -1; }
+        string name(fileName);
         return remove(fileName.c_str());  //Remove the file. 0: success; others: fail
     }
 
@@ -52,6 +53,7 @@ namespace PeterDB {
             fseek(fileHandle.file, 2 * INT_FIELD_LEN, SEEK_SET);
             fread(&fileHandle.appendPageCounter, INT_FIELD_LEN, 1, fileHandle.file);
             fileHandle.readPageCounter++;
+//            fseek(fileHandle.file, 3 * INT_FIELD_LEN, SEEK_SET);
 //            todo: remove
             fread(&fileHandle.root, INT_FIELD_LEN, 1, fileHandle.file);
         }
@@ -92,6 +94,7 @@ namespace PeterDB {
     RC FileHandle::readPage(PageNum pageNum, void *data) {
         if (!this->file) { return -1; } //File does not exist.
         if (getNumberOfPages() <= pageNum) { return -1; } //error: exceed the max page #
+//        if (getNumberOfPages() < pageNum) { return -1; } //error: exceed the max page #
         long startPosition = PAGE_SIZE * (pageNum + 1);    //page # starts from 0; the first page is the hidden page
         fseek(file, startPosition, SEEK_SET); //move the pointer to the required page
         fread(data, 1, PAGE_SIZE, file);
@@ -133,6 +136,7 @@ namespace PeterDB {
         if (!file) { return -1; }
         fseek(file, 0, SEEK_END);
         int numOfPages = 0;
+//        std::cout<<ftell(file)<<endl;
         if ((ftell(file) / PAGE_SIZE) - 1 > 0) { numOfPages = ftell(file) / PAGE_SIZE - 1; }
 //        cout<<"---------------#of pgs= " <<numOfPages<<endl;
         return numOfPages;

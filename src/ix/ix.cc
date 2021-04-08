@@ -26,9 +26,9 @@ namespace PeterDB {
 
 
     RC IndexManager::closeFile(IXFileHandle &ixFileHandle) {
-        ixFileHandle.fh.readPageCounter = 0;
-        ixFileHandle.fh.writePageCounter = 0;
-        ixFileHandle.fh.appendPageCounter = 0;
+//        ixFileHandle.fh.readPageCounter = 0;
+//        ixFileHandle.fh.writePageCounter = 0;
+//        ixFileHandle.fh.appendPageCounter = 0;
         ixFileHandle.ixReadPageCounter = 0;
         ixFileHandle.ixWritePageCounter = 0;
         ixFileHandle.ixAppendPageCounter = 0;
@@ -60,7 +60,6 @@ namespace PeterDB {
             writeRoot(ixFileHandle, newRootId);
             res = ixFileHandle.fh.appendPage(newRootPage);
             if(res != 0) {return -1; }
-            cout<<"split rid: "<<rid.pageNum<<", "<<rid.slotNum<<endl;
         }
 //        IXFileHandle f;
 //        pfm.openFile(ixFileHandle.fh.fileName, f.fh);
@@ -109,13 +108,12 @@ namespace PeterDB {
         }
 
         if(ixFileHandle.fh.readPage(currentNode, page) != 0) {return -1;}
-//        cout<<currentNode<<", "<<getFreeSpc(page)<<"-----"<<endl;
         int freeSpc = -1;
         if(isLeafNode(page, freeSpc)) {
             if(freeSpc >= keyRidPairLen) { //add into the current page
                 //todo: remove one page param
-                res = formLeafNodeData(page, attribute, keyRidPair, keyRidPairLen, PAGE_SIZE - freeSpc - 2 * INT_FIELD_LEN, newPage);
-                if(res != 0) {return -1; }
+                if(formLeafNodeData(page, attribute, keyRidPair, keyRidPairLen,
+                        PAGE_SIZE - freeSpc - 2 * INT_FIELD_LEN, newPage) != 0 ){return -1; }
                 res = ixFileHandle.fh.writePage(currentNode, newPage);
                 if(res != 0) {return -1; }
                 splitInfo.isSplit = false;
@@ -131,7 +129,6 @@ namespace PeterDB {
         }
         else { // inter node
             if(splitInfo.isSplit == false) { //search
-//                cout<<endl<<endl<<"bbbbbbbbbb"<<endl;
                 int subTreePageNum = getSubTreePageNum(attribute, key, page,
                         PAGE_SIZE - freeSpc - INT_FIELD_LEN, false);
                 res = insertEntry_inner(ixFileHandle, attribute, key, rid, subTreePageNum, splitInfo);
@@ -165,6 +162,60 @@ namespace PeterDB {
     }
 
 
+
+//    int IndexManager::splitTheInternalNode(IXFileHandle &ixFileHandle, const Attribute &attribute, int currentNode,
+//                                           SplitInfo &splitInfo, //void *pKeypToInsert,
+//                                           void *page, int freeSpcLen, int pKeypLen, int splitOffset) const {
+//        char lastPKeyPInLeft[PAGE_SIZE];
+//        int tLen = 0;
+//        if(attribute.type == TypeVarChar) {
+//            memcpy(&tLen, (char*)page + splitOffset, INT_FIELD_LEN);
+//        }
+//        int promptPKeyPLen = 3 * INT_FIELD_LEN + tLen;
+//        memcpy(lastPKeyPInLeft, (char*)page + splitOffset - INT_FIELD_LEN, promptPKeyPLen);
+//        char leftIndexPage[PAGE_SIZE];
+//        char rightIndexPage[PAGE_SIZE];
+//        int freeSpc_LeftIndex = PAGE_SIZE - splitOffset - promptPKeyPLen + INT_FIELD_LEN;
+////form left index page
+//        memcpy(leftIndexPage, page, splitOffset + promptPKeyPLen - INT_FIELD_LEN);
+//        updateFreeSpc(leftIndexPage, freeSpc_LeftIndex);
+//
+//        int freeSpc_RightIndex = PAGE_SIZE - (PAGE_SIZE - INT_FIELD_LEN - freeSpcLen
+//                                              - (splitOffset + promptPKeyPLen - INT_FIELD_LEN) - INT_FIELD_LEN)
+//                                 - INT_FIELD_LEN;
+//        memcpy(rightIndexPage, (char*)page + splitOffset - 2 * INT_FIELD_LEN + promptPKeyPLen,
+//               PAGE_SIZE - INT_FIELD_LEN - freeSpc_RightIndex);
+//        updateFreeSpc(rightIndexPage, freeSpc_RightIndex);
+//
+//        char leftIndexPage2[PAGE_SIZE];
+//        char rightIndexPage2[PAGE_SIZE];
+//        if(compareValue((char*)splitInfo.promotedPKeyP + INT_FIELD_LEN, (char*)lastPKeyPInLeft + INT_FIELD_LEN, attribute.type) > 0) {
+//            formInterNodePageData(rightIndexPage, attribute, splitInfo, pKeypLen,
+//                                  PAGE_SIZE - INT_FIELD_LEN - freeSpc_RightIndex, rightIndexPage2);
+//            memcpy(leftIndexPage2, leftIndexPage, PAGE_SIZE);
+//        }else {
+//            formInterNodePageData(leftIndexPage, attribute, splitInfo, pKeypLen,
+//                                  PAGE_SIZE - INT_FIELD_LEN - freeSpc_LeftIndex, leftIndexPage2);
+//            memcpy(rightIndexPage2, rightIndexPage, PAGE_SIZE);
+//        }
+//
+//        int rightIndexPageNum = ixFileHandle.fh.getNumberOfPages();
+//        int len_firstKeyInTheRightPage = getKeyLen((char*)rightIndexPage2 + INT_FIELD_LEN, attribute);
+//        memcpy((char*)splitInfo.promotedPKeyP, &currentNode, INT_FIELD_LEN);
+//        memcpy((char*)splitInfo.promotedPKeyP + INT_FIELD_LEN, (char*)rightIndexPage2 + INT_FIELD_LEN, len_firstKeyInTheRightPage);
+//        memcpy((char*)splitInfo.promotedPKeyP + INT_FIELD_LEN + len_firstKeyInTheRightPage, &rightIndexPageNum, INT_FIELD_LEN);
+//
+//        char newRightIndexPage[PAGE_SIZE];
+//        int tempFreeSpcLen = getFreeSpc(rightIndexPage2); //not freeSpcIndicator, since it is a intermediate node
+//        memcpy(newRightIndexPage, (char*)rightIndexPage2 + INT_FIELD_LEN + len_firstKeyInTheRightPage,
+//               PAGE_SIZE - tempFreeSpcLen - 2 * INT_FIELD_LEN - len_firstKeyInTheRightPage);
+//        updateFreeSpc(newRightIndexPage, tempFreeSpcLen + INT_FIELD_LEN + len_firstKeyInTheRightPage);
+//        if(ixFileHandle.fh.writePage(currentNode, leftIndexPage2)!=0){return -1;}
+//        if(ixFileHandle.fh.appendPage(newRightIndexPage)!=0){return -1;}
+//
+//    }
+
+//original
     int IndexManager::splitTheInternalNode(IXFileHandle &ixFileHandle, const Attribute &attribute, int currentNode,
                                             SplitInfo &splitInfo, //void *pKeypToInsert,
                                             void *page, int freeSpcLen, int pKeypLen, int splitOffset) const {
@@ -240,12 +291,36 @@ namespace PeterDB {
     }
 
 
+
+    int IndexManager::getSplitOffset(const Attribute &attribute, const void *page,
+                                          int freeSpc, bool isLeaf) const {
+        int splitOffset = 0;
+        int bound = isLeaf ? ceil((PAGE_SIZE - freeSpc - 2 * INT_FIELD_LEN) / 2) : ceil((PAGE_SIZE - freeSpc - INT_FIELD_LEN) / 2);
+        int offset_movement = isLeaf? 3 * INT_FIELD_LEN: 2 * INT_FIELD_LEN;
+        if(attribute.type == TypeVarChar){
+            int tempInt = -1;
+            while(1) {
+                memcpy(&tempInt, (char*)page + splitOffset, INT_FIELD_LEN);
+                if(splitOffset + 3 * sizeof(int) + tempInt >= bound){break;}
+                splitOffset = splitOffset + offset_movement + tempInt;
+            }
+        }else {
+            int numOfTotalRecords = isLeaf? this->getLenOfRecords(freeSpc) / (3 * INT_FIELD_LEN):
+                    (PAGE_SIZE - freeSpc - 2 * INT_FIELD_LEN) / (2 * INT_FIELD_LEN);
+            int recordsInFirstPage = ceil((double)numOfTotalRecords / 2);
+            splitOffset = isLeaf?recordsInFirstPage * (3 * INT_FIELD_LEN):recordsInFirstPage * 2 * INT_FIELD_LEN + INT_FIELD_LEN; //加上第一个page num
+        }
+        return splitOffset;
+    }
+
+
     int IndexManager::getSplitOffset_internal(const Attribute &attribute, const void *page, int freeSpcLen) const {
         int splitOffset = INT_FIELD_LEN;
         if(attribute.type == TypeVarChar){
             int tempInt = -1;
-            while(splitOffset < ceil((double)(PAGE_SIZE - INT_FIELD_LEN) / 2)) {
+            while(1) {
                 memcpy(&tempInt, (char*)page + splitOffset, INT_FIELD_LEN);
+                if(splitOffset + 2 * INT_FIELD_LEN + tempInt >= ceil((double)(PAGE_SIZE - freeSpcLen - INT_FIELD_LEN) / 2)){break;}
                 splitOffset = splitOffset + 2 * INT_FIELD_LEN + tempInt;
             }
         }else {//减掉第一个page num
@@ -253,7 +328,7 @@ namespace PeterDB {
             int recordsInFirstPage = ceil((double)numOfTotalRecords / 2);
             splitOffset = recordsInFirstPage * 2 * INT_FIELD_LEN + INT_FIELD_LEN; //加上第一个page num
         }
-        return splitOffset; //到right node 结束
+        return splitOffset;
     }
 
     int IndexManager::formInterNodePageData(void *page, Attribute attribute, SplitInfo splitInfo,
@@ -315,6 +390,7 @@ namespace PeterDB {
                 len += sizeof(int);
             }
             memcpy(tempK, (char*)page + offset, len);
+//            todo: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  >=
             if((!isKeyNull && compareValue(tempK, (char *) key, attribute.type) >= 0) || isKeyNull) {
                 memcpy(&subTreePageNum, (char*)page + offset - sizeof(int), sizeof(int));
                 isSubTreeFound = true;
@@ -336,9 +412,15 @@ namespace PeterDB {
                                      int splitOffset) {
         char leftPage[PAGE_SIZE];
         char rightPage[PAGE_SIZE];
-
-        int freeSpace_LeftPage = PAGE_SIZE - splitOffset - 2 * INT_FIELD_LEN;
-        int freeSpace_RightPage = PAGE_SIZE - (PAGE_SIZE - 2 * INT_FIELD_LEN - freeSpcLen - splitOffset) - 2 * INT_FIELD_LEN;
+        char lastKeyInLeft[PAGE_SIZE];
+        int tLen = 0;
+        if(attribute.type == TypeVarChar) {
+            memcpy(&tLen, (char*)page + splitOffset, INT_FIELD_LEN);
+        }
+        int promptKeyRidLen = 3 * INT_FIELD_LEN + tLen;
+        memcpy(lastKeyInLeft, (char*)page + splitOffset, promptKeyRidLen);
+        int freeSpace_LeftPage = PAGE_SIZE - splitOffset - promptKeyRidLen - 2 * INT_FIELD_LEN;
+        int freeSpace_RightPage = PAGE_SIZE - (PAGE_SIZE - 2 * INT_FIELD_LEN - freeSpcLen - splitOffset - promptKeyRidLen) - 2 * INT_FIELD_LEN;
         int record_length_left = PAGE_SIZE - 2 * INT_FIELD_LEN - freeSpace_LeftPage;
         int record_length_right = PAGE_SIZE - 2 * INT_FIELD_LEN - freeSpace_RightPage;
         freeSpace_LeftPage += pow(2, 14); //add flag for leaf node
@@ -348,25 +430,19 @@ namespace PeterDB {
         int currentNextPage = getNextPageID(page);
         int nextPagePointer_RightPage = currentNextPage;
 
-        memcpy(leftPage, page, splitOffset);
+        memcpy(leftPage, page, splitOffset + promptKeyRidLen);
         updateFreeSpc(leftPage, freeSpace_LeftPage);
         updateNextPagePointer(leftPage, nextPagePointer_LeftPage);
 
-        memcpy(rightPage, (char*)page + splitOffset,
-               (getLenOfRecords(freeSpcLen) - splitOffset));
+        memcpy(rightPage, (char*)page + splitOffset + promptKeyRidLen,
+               (getLenOfRecords(freeSpcLen) - splitOffset - promptKeyRidLen));
         updateFreeSpc(rightPage, freeSpace_RightPage);
         updateNextPagePointer(rightPage, nextPagePointer_RightPage);
 
-        char firstKeyInTheRightPage[PAGE_SIZE];
-        int varLen = sizeof(int);
-        if(attribute.type == TypeVarChar){
-            memcpy(&varLen, rightPage, sizeof(int));
-            varLen += sizeof(int);
-        }
-        memcpy(firstKeyInTheRightPage, rightPage, varLen);
         char rightPageAfterInsert[PAGE_SIZE];
         char leftPageAfterInsert[PAGE_SIZE];
-        if(compareValue((char *) key, firstKeyInTheRightPage, attribute.type) >= 0) {
+
+        if(compareValue((char *) key, lastKeyInLeft, attribute.type) > 0) { //insert into right
             formLeafNodeData(rightPage, attribute, keyRidPair, keyRidPairLen,
                              record_length_right, rightPageAfterInsert);
             memcpy(leftPageAfterInsert, leftPage, PAGE_SIZE);
@@ -376,15 +452,9 @@ namespace PeterDB {
             memcpy(rightPageAfterInsert, rightPage, PAGE_SIZE);
         }
 
-        int keyLen = 0;
-        if(attribute.type == TypeVarChar){
-            memcpy(&keyLen, rightPageAfterInsert, sizeof(int));
-        }
-        keyLen += sizeof(int);
-
-        memcpy((char*)splitInfo.promotedPKeyP + INT_FIELD_LEN, rightPageAfterInsert, keyLen);
+        memcpy((char*)splitInfo.promotedPKeyP + INT_FIELD_LEN, lastKeyInLeft, tLen + INT_FIELD_LEN);
         memcpy((char*)splitInfo.promotedPKeyP, &currentNode, INT_FIELD_LEN);
-        memcpy((char*)splitInfo.promotedPKeyP + keyLen + INT_FIELD_LEN, &nextPagePointer_LeftPage, INT_FIELD_LEN);
+        memcpy((char*)splitInfo.promotedPKeyP + tLen + 2 * INT_FIELD_LEN, &nextPagePointer_LeftPage, INT_FIELD_LEN);
         if(ixFileHandle.fh.writePage(currentNode, leftPageAfterInsert)!=0){return -1;}
         if(ixFileHandle.fh.appendPage(rightPageAfterInsert)!=0){return -1;}
         return 0;
@@ -406,14 +476,28 @@ namespace PeterDB {
         int splitOffset = 0;
         if(attribute.type == TypeVarChar){
             int tempInt = -1;
-            while(splitOffset < ceil((double)(PAGE_SIZE - 2 * INT_FIELD_LEN) / 2)) {
+            while(1) {
                 memcpy(&tempInt, (char*)page + splitOffset, INT_FIELD_LEN);
+                if(splitOffset + 3 * sizeof(int) + tempInt >= ceil((PAGE_SIZE - freeSpc - 2 * INT_FIELD_LEN) / 2)){break;}
                 splitOffset = splitOffset + 3 * sizeof(int) + tempInt;
             }
+//            while(compareValue((char*)page + splitOffset,
+//                    (char*)page + splitOffset - 3 * INT_FIELD_LEN - tempInt, attribute.type) == 0) {
+//                memcpy(&tempInt, (char*)page + splitOffset, INT_FIELD_LEN);
+//                splitOffset = splitOffset + 3 * sizeof(int) + tempInt;
+//            }
+//            memcpy(&tempInt, (char*)page + splitOffset, INT_FIELD_LEN);
+//            cout<<"===="<<splitOffset<<endl;
+//            printStr(tempInt, (char*)page + splitOffset + 4, std::cout);
+//            cout<<endl;
         }else {
             int numOfTotalRecords = this->getLenOfRecords(freeSpc) / (3 * INT_FIELD_LEN);
             int recordsInFirstPage = ceil((double)numOfTotalRecords / 2);
             splitOffset = recordsInFirstPage * (3 * INT_FIELD_LEN);
+//            while(compareValue((char*)page + splitOffset,
+//                    (char*)page + splitOffset - 3 * INT_FIELD_LEN, attribute.type) == 0) {
+//                splitOffset += 3 * INT_FIELD_LEN;
+//            }
         }
         return splitOffset;
     }
@@ -437,10 +521,18 @@ namespace PeterDB {
                 memcpy(&tempLen, (char*)oldPage + offset, sizeof(int));
             }
             tempLen += sizeof(int);
-            memcpy(tempKey, (char*)oldPage + offset, tempLen);
+            memcpy(tempKey, (char*)oldPage + offset, tempLen + 2 * INT_FIELD_LEN);
             if(compareValue(key, tempKey, attribute.type) < 0) {
                 break;
             }
+//            if(compareValue(key, tempKey, attribute.type) == 0) {
+//                if(compareValue((char*)keyRidPair + keyRidPairLen - 2 * INT_FIELD_LEN,
+//                        (char*)tempKey + keyRidPairLen - 2 * INT_FIELD_LEN, TypeInt) == 0
+//                        && compareValue((char*)keyRidPair + keyRidPairLen - INT_FIELD_LEN,
+//                                        (char*)tempKey + keyRidPairLen - INT_FIELD_LEN, TypeInt) == 0) {
+//                    return 1; //no need to insert
+//                }
+//            }
             offset = offset + tempLen + 2 * sizeof(int);
         }
 
@@ -487,14 +579,7 @@ namespace PeterDB {
         return comp;
     }
 
-//    int IndexManager::markAsLeaf(IXFileHandle &ixFileHandle, const RID &newRid) const {
-//        char pageData[PAGE_SIZE];
-//        if(ixFileHandle.fh.readPage(newRid.pageNum, pageData) !=0 ){return -1;}
-//        int freeSpc = rbfm.getFreeSpc(pageData) + pow(2, 14);
-//        rbfm.updateFreeSpc(pageData, freeSpc);
-//        if(ixFileHandle.fh.writePage(newRid.pageNum, pageData)!=0) {return -2;}
-//        return 0;
-//    }
+
 //todo remove freeSpc
     bool IndexManager::isLeafNode(const void *page, int &freeSpc) const {
         freeSpc = getFreeSpcIndicator((char*)page);
@@ -534,9 +619,6 @@ namespace PeterDB {
         int counter = 0;
         char returnedKey[PAGE_SIZE];
         int keyRID_len = 0, keyLen = 0;
-//        if(rid.pageNum == 270265) {
-//            cout<<"aaaa"<<endl;
-//        }
         while (ix_ScanIterator.getNextEntry(returnedRID, &returnedKey) == 0) {
             if(returnedRID.pageNum == rid.pageNum && returnedRID.slotNum == rid.slotNum) {
                 counter++;
@@ -675,7 +757,11 @@ namespace PeterDB {
         ix_ScanIterator.recordOffset = 0;
         ix_ScanIterator.lastNode = -1;
 
-        ix_ScanIterator.ixFileHandle = &ixFileHandle;
+//        ix_ScanIterator.ixFileHandle = &ixFileHandle;
+        if (this->openFile(ixFileHandle.fh.fileName, ix_ScanIterator.ixFileHandle) != 0) return -1;
+//        ix_ScanIterator.ixFileHandle->fh.fileName = "aaaa";
+//        this->openFile(ixFileHandle.fh.fileName, ix_ScanIterator.ixFileHandle);
+//        ix_ScanIterator.ixFileHandle.
         ix_ScanIterator.attribute = attribute;
         ix_ScanIterator.rootNode = getRoot(ixFileHandle);
         ix_ScanIterator.currentNode = ix_ScanIterator.rootNode;
@@ -770,7 +856,7 @@ namespace PeterDB {
         int freeSpcLen = -1;
         int offset = 0;
         int key_int = 0;
-        int tempLen = -1;
+        int tempLen = 0;
         float key_float = 0.0;
         char key[PAGE_SIZE];
         int recordLen = -1, keylen = -1, leftNode = -1, rightNode = -1;
@@ -784,29 +870,75 @@ namespace PeterDB {
             offset = 0;
             while(offset < recordLen) {
                 int tempPageNum = -1, tempSlotNum = -1;
-                if(i > 0) {out<<",";}
-                out<<"\"";
-                if(attribute.type == TypeVarChar) {
-                    memcpy(&tempLen, (char*)page + offset, sizeof(int));
-                    printStr(tempLen, (char*)page + offset + sizeof(int), out);
-                    offset += tempLen;
-                }else if(attribute.type == TypeInt){
-                    memcpy(&key_int, (char*)page + offset, sizeof(int));
-                    out<<key_int;
-                }else {
-                    memcpy(&key_float, (char*)page + offset, sizeof(int));
-                    out<<key_float;
-                }
+                tempLen = 0;
+                if(compareValue((char*)page + offset, ixFileHandle.currentKey, attribute.type) == 0
+                && offset > 0) {
+                    if(attribute.type == TypeVarChar) {
+                        memcpy(&tempLen, (char*)page + offset, INT_FIELD_LEN);
+                        offset += tempLen;
+                    }
+                    offset += sizeof(int);
+                    memcpy(&tempPageNum, (char*)page + offset, sizeof(int));
+                    offset += sizeof(int);
+                    memcpy(&tempSlotNum, (char*)page + offset, sizeof(int));
+                    offset += sizeof(int);
+                    out<<",("<<tempPageNum<<","<<tempSlotNum<<")";
+                } else {
+                    if(i > 0){out<<"]\",\"";} else {out<<"\"";}
+                    if(attribute.type == TypeVarChar) {
+                        memcpy(&tempLen, (char*)page + offset, sizeof(int));
+                        memcpy(ixFileHandle.currentKey, (char*)page + offset, tempLen + INT_FIELD_LEN);
+                        printStr(tempLen, (char*)page + offset + sizeof(int), out);
+                        offset += tempLen;
+                    }else if(attribute.type == TypeInt){
+                        memcpy(ixFileHandle.currentKey, (char*)page + offset, INT_FIELD_LEN);
+                        memcpy(&key_int, (char*)page + offset, sizeof(int));
+                        out<<key_int;
+                    }else {
+                        memcpy(ixFileHandle.currentKey, (char*)page + offset, INT_FIELD_LEN);
+                        memcpy(&key_float, (char*)page + offset, sizeof(int));
+                        out<<key_float;
+                    }
 
-                offset += sizeof(int);
-                memcpy(&tempPageNum, (char*)page + offset, sizeof(int));
-                offset += sizeof(int);
-                memcpy(&tempSlotNum, (char*)page + offset, sizeof(int));
-                offset += sizeof(int);
-                out<<": [("<<tempPageNum<<","<<tempSlotNum<<")]\"";
-                i++;
+                    offset += sizeof(int);
+                    memcpy(&tempPageNum, (char*)page + offset, sizeof(int));
+                    offset += sizeof(int);
+                    memcpy(&tempSlotNum, (char*)page + offset, sizeof(int));
+                    offset += sizeof(int);
+                    out<<": [("<<tempPageNum<<","<<tempSlotNum<<")";
+                    i++;
+                }
             }
-            out<<"]}";
+            if(recordLen == 0){out<<"]}"<<endl;}
+            else {
+                char nextPage[PAGE_SIZE];
+                bool isEnd = false;
+                if(offset > 0) {
+                    while (!isEnd && ixFileHandle.fh.readPage(this->getNextPageID(page), nextPage) == 0) {
+                        int newRecordLen = PAGE_SIZE - 2 * sizeof(int) - getFreeSpc(nextPage);
+                        int newOffset = 0;
+                        while (newOffset < newRecordLen) {
+                            if (compareValue((char *) page + offset - 3 * INT_FIELD_LEN - tempLen,
+                                             (char *) nextPage + newOffset, attribute.type) != 0) {
+                                isEnd = true;
+                                break;
+                            }
+                            int newTempLen = 0;
+                            if (attribute.type == TypeVarChar) {
+                                memcpy(&newTempLen, (char *) nextPage + newOffset, INT_FIELD_LEN);
+                            }
+                            int newPageNum = 0, newSlotNum = -1;
+                            memcpy(&newPageNum, (char *) nextPage + newOffset + newTempLen + INT_FIELD_LEN,
+                                   INT_FIELD_LEN);
+                            memcpy(&newSlotNum, (char *) nextPage + newOffset + newTempLen + 2 * INT_FIELD_LEN,
+                                   INT_FIELD_LEN);
+                            out << ",(" << newPageNum << "," << newSlotNum << ")";
+                            newOffset = newOffset + newTempLen + 3 * INT_FIELD_LEN;
+                        }
+                    }
+                }
+                out<<"]\"]}"<<endl;
+            }
         }
         else {      //if(node == ixFileHandle.rootNode){
             recordLen = PAGE_SIZE - freeSpcLen - INT_FIELD_LEN;
@@ -869,95 +1001,9 @@ namespace PeterDB {
     IX_ScanIterator::~IX_ScanIterator() {
     }
 
-
-//    RC IX_ScanIterator::getNextEntry(RID &rid, void *key) {
-////        char returnedKey[PAGE_SIZE];
-//        //come to the end of the file.
-//        if(this->currentNode == -1) {return IX_EOF;}
-//        if(currentNode != lastNode) {
-//            if(ixFileHandle->fh.readPage(currentNode, page)!=0){return -1;}
-//            freeSpc = im.getFreeSpc(page);
-////            cout<<im.getNextPageID(page)<<endl;
-//        }
-//
-//        int keyLen = getKeyLength((char*) page + recordOffset, attribute.type);
-//        memcpy(key, (char*)page + recordOffset, keyLen);
-//
-//        if(!isHighKeySatisfied(key)){return -1; }
-//        recordOffset += keyLen;
-//        int slotNum = 0;
-//        memcpy(&rid.pageNum, (char*)page + recordOffset, sizeof(int));
-//        recordOffset += sizeof(int);
-//        memcpy(&slotNum, (char*)page + recordOffset, sizeof(int));
-//        rid.slotNum = (short)slotNum;
-//        recordOffset += sizeof(int);
-//        lastNode = currentNode;
-//
-//        if(recordOffset >= PAGE_SIZE - freeSpc - 2 * sizeof(int)){
-//            recordOffset = 0;
-//            currentNode = im.getNextPageID(page);
-////            cout<<currentNode<<endl;
-//        }
-////        cout<<"rid:"<<rid.pageNum<<", "<<rid.slotNum<<endl;
-//        return 0;
-//    }
-
-//    RC IX_ScanIterator::getNextEntry(RID &rid, void *key) {
-//        int res = -1;
-//        //come to the end of the file.
-//        if(this->currentNode == -1) {return IX_EOF;}
-//        if(currentNode != lastNode) {
-//            if(ixFileHandle->fh.readPage(currentNode, page)!=0){return -1;}
-//            freeSpc = im.getFreeSpc(page);
-//            lastNode = currentNode;
-////            cout<<im.getNextPageID(page)<<endl;
-//        }
-////        char returnedKey[PAGE_SIZE];
-//        if(isIteratorNew) {
-//            isIteratorNew = false;
-////            currentNode = rootNode;
-//
-//            res = searchFirstEntry(key, rid);
-//            if(res == -1) {
-//                return -1;
-//            }
-//            ////////////////
-////            int temp;
-////            memcpy(&temp, returnedKey, 4);
-//
-////            int keyLen = sizeof(int);
-////            if(attribute.type == TypeVarChar){
-////                memcpy(&keyLen, returnedKey, sizeof(int));
-////                keyLen += sizeof(int);
-////            }
-////            memcpy(key, returnedKey, keyLen);
-////            res = 0;
-//        }else {
-//            int keyLen = getKeyLength((char*) page + recordOffset, attribute.type);
-//            memcpy(key, (char*)page + recordOffset, keyLen);
-//
-//            if(!isHighKeySatisfied(key)){return -1; }
-//            recordOffset += keyLen;
-//            int slotNum = 0;
-//            memcpy(&rid.pageNum, (char*)page + recordOffset, sizeof(int));
-//            recordOffset += sizeof(int);
-//            memcpy(&slotNum, (char*)page + recordOffset, sizeof(int));
-//            rid.slotNum = (short)slotNum;
-//            recordOffset += sizeof(int);
-//            lastNode = currentNode;
-//            res = 0;
-//
-//        }
-//        if(recordOffset >= im.getLenOfRecords(freeSpc) -1){
-//            recordOffset = 0;
-//            lastNode = currentNode;
-//            currentNode = im.getNextPageID(page);
-//        }
-//        return res;
-//    }
-
 //todo
     RC IX_ScanIterator::getNextEntry(RID &rid, void *key) {
+//        cout<<this->ixFileHandle->fh.fileName<<endl;
         int res = -1;
         char returnedKey[PAGE_SIZE];
         if(isIteratorNew) {
@@ -994,9 +1040,8 @@ namespace PeterDB {
         }
         if(this->currentNode == -1) {return -1;}
         if(currentNode != lastNode) {
-            if(ixFileHandle->fh.readPage(currentNode, page)!=0){return -1;}
+            if(ixFileHandle.fh.readPage(currentNode, page)!=0){return -1;}
             freeSpc = im.getFreeSpc(page);
-//            cout<<im.getNextPageID(page)<<endl;
         }
         //get the offset and length in the current page
         char tempKey[PAGE_SIZE];
@@ -1018,17 +1063,11 @@ namespace PeterDB {
         return 0;
     }
 
-
-
-
-
-
     RC IX_ScanIterator::searchFirstEntry(void *returnedKey, RID &rid) {
-        int retu2rnValue = -1;
         int freeSpcLen = -1;
         if(currentNode != lastNode) {
             lastNode = currentNode;
-            if(ixFileHandle->fh.readPage(currentNode, page)!=0){return -1;}
+            if(ixFileHandle.fh.readPage(currentNode, page)!=0){return -1;}
             freeSpc = im.getFreeSpc(page);
         }
         if(freeSpc >= PAGE_SIZE - 2 * INT_FIELD_LEN) {
@@ -1046,23 +1085,23 @@ namespace PeterDB {
             return searchFirstEntry(returnedKey, rid);
         } //get the offset and length in the current page
         int tempPageNum = -1, tempSlotNum = -1, tempOffset = 0;
-        int lowKeyInt = -1, highKeyInt = -1;
+//        int lowK2eyInt = -1, highKey2Int = -1;
         bool isKeyRidPairFound = false;
-        if(lowKeyInclusive != 0){
-            memcpy(&lowKeyInt, lowKey, sizeof(int));
-        }
-        if(highKeyInclusive != 0){
-            memcpy(&highKeyInt, highKey, sizeof(int));
-        }
+//        if(lowKeyInclusive != 0){
+//            memcpy(&lowKeyInt, lowKey, sizeof(int));
+//        }
+//        if(highKeyInclusive != 0){
+//            memcpy(&highKeyInt, highKey, sizeof(int));
+//        }
         int lenOfAllEntries = im.getLenOfRecords(freeSpc);
         char tempKey[PAGE_SIZE];
         int keyLen = -1;
         while(tempOffset < lenOfAllEntries){
-            keyLen = sizeof(int);
+            keyLen = 0;
             if(attribute.type == TypeVarChar) {
                 memcpy(&keyLen, (char*)page +tempOffset, sizeof(int));
-                keyLen += sizeof(int);
             }
+            keyLen += sizeof(int);
             memcpy(tempKey, (char*)page + tempOffset, keyLen);
             if(lowKeyInclusive == 0) {
                 if(isHighKeySatisfied(tempKey)){
@@ -1152,7 +1191,9 @@ namespace PeterDB {
 
     RC IX_ScanIterator::close() {
         PagedFileManager &pfm = PagedFileManager::instance();
-//        pfm.closeFile(this->ixFileHandle->fh);
+        pfm.closeFile(this->ixFileHandle.fh);
+//        this->ixFileHandle.fh.fileName = "";
+        this->ixFileHandle.fh.file = nullptr;
         return 0;
     }
 
@@ -1168,15 +1209,9 @@ namespace PeterDB {
     RC
     IXFileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount) {
         this->fh.collectCounterValues(this->ixReadPageCounter, this->ixWritePageCounter, ixAppendPageCounter);
-//        this->ixWritePageCounter = writePageCount;
-//        this->ixAppendPageCounter = appendPageCount;
-//        this->ixReadPageCounter = readPageCount;
         readPageCount = this->ixReadPageCounter;
         writePageCount = this->ixWritePageCounter;
         appendPageCount = this->ixAppendPageCounter;
         return 0;
     }
-
-
-
 } // namespace PeterDB

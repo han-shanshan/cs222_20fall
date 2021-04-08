@@ -26,6 +26,7 @@ namespace PeterDB {
         unsigned ixAppendPageCounter;
 //        int rootNode;
         FileHandle fh;
+        char currentKey[PAGE_SIZE];
 
         // Constructor
         IXFileHandle();
@@ -125,6 +126,8 @@ namespace PeterDB {
         void writeRoot(IXFileHandle &ixFileHandle, int root) const;
 
         int getRoot(IXFileHandle &ixFileHandle) const;
+
+        int getSplitOffset(const Attribute &attribute, const void *page, int freeSpc, bool isLeaf) const;
     };
 
     class IX_ScanIterator {
@@ -134,7 +137,7 @@ namespace PeterDB {
         char highKey[PAGE_SIZE];
         int lowKeyInclusive; // -1: low key not inclusive; 1: inclusive; 0: no low bound
         int highKeyInclusive;// -1: high key not inclusive; 1: inclusive; 0: no high bound
-        IXFileHandle *ixFileHandle;
+        IXFileHandle ixFileHandle;
         int rootNode;
         int currentNode;
         int pageNum;

@@ -73,15 +73,6 @@ namespace PeterDB {
         return idxAttrs;
     }
 
-//    vector<Attribute> RelationManager::getIndexesTableDescriptor() {
-//        vector<Attribute> indexAttrs;
-//        indexAttrs.push_back(attribute("table-id", TypeInt, 4));
-//        indexAttrs.push_back(attribute("table-fileName", TypeVarChar, 50));
-//        indexAttrs.push_back(attribute("column-pos", TypeInt, 4));
-//        indexAttrs.push_back(attribute("column-fileName", TypeVarChar, 50));
-//        return indexAttrs;
-//    }
-
 
     Attribute RelationManager::attribute(const string &name, AttrType type, int length){
         Attribute attr;
@@ -166,9 +157,6 @@ namespace PeterDB {
 
         //prepare the table buffer. Tables (table-id:int, table-fileName:varchar(50), file-fileName:varchar(50))
         prepareDecodedRecord(nullsIndicator, tablesTableDescriptor, tableAttrValues, buffer);
-//    cout<<"insert: ";
-//        std::stringstream stream;
-//        rbfm.printRecord(tablesTableDescriptor, buffer, stream);
         FileHandle tablCatalogFH;
         rbfm.openFile(tableFileName, tablCatalogFH);
 
@@ -388,19 +376,18 @@ namespace PeterDB {
 
 //        memcpy((char*)filterValue, &tableId, sizeof(int));
         constructVarcharFilterValue(tableName, filterValue);
-        attrNames.push_back("idx-file-name");
+        attrNames.push_back("col-name");
         rbfm.scan(idxFH, idxDescriptor, "table-name",
                   EQ_OP, filterValue, attrNames, idxIterator);
         vector<Attribute> descriptor;
         Attribute a;
         a.type = TypeVarChar;
         a.length = 50;
-        a.name = "idx-file-name";
+        a.name = "col-name";
         descriptor.push_back(a);
-        int len = 0;
         while (idxIterator.getNextRecord(rid, tempData) != RM_EOF) {
             if(rbfm.deleteRecord(idxIterator.iteratorHandle, idxDescriptor, rid) != 0) {return -1; }
-            if(rbfm.destroyFile((char*)(tempData + 5)) != 0) {return -3;}
+            int res = rbfm.destroyFile(tableName + "_" + string(tempData + 5) + ".idx") ;
         }
         idxIterator.close();
         rbfm.closeFile(idxFH);
@@ -436,6 +423,7 @@ namespace PeterDB {
 
 
     RC RelationManager::getAttributes(const std::string &tableName, std::vector<Attribute> &attrs) {
+        attrs.clear();
         if(strcmp(tableName.c_str(), TABLE_CATALOG_FILE) == 0 ){
             attrs = getTablesTableDescriptor();
             return 0;
@@ -626,12 +614,10 @@ namespace PeterDB {
         else if(strcmp(tableName.c_str(), COLUMN_CATALOG_FILE) == 0 ){
             rbfm.openFile(COLUMN_CATALOG_FILE, fileHandle);
         }else rbfm.openFile(tableName, fileHandle);
-//    RBFM_ScanIterator rbfmScanner;
         vector<Attribute> recordDescriptor;
         this->getAttributes(tableName, recordDescriptor);
         rbfm.scan(fileHandle, recordDescriptor, conditionAttribute, compOp,
                   value, attributeNames, rm_ScanIterator.rbfm_scanner);
-//    rbfm.closeFile(fh);
         return 0;
     }
 
@@ -647,12 +633,53 @@ namespace PeterDB {
         idxAttrValues.push_back(attributeName); //attrs[j].type
         idxAttrValues.push_back(idxFileName);
         prepareDecodedRecord(nullsIndicator, idxTableDescriptor, idxAttrValues, buffer);
-//            rbfm.printRecord(colTableDescriptor, buffer, std::cout);
         FileHandle fh;
         if(rbfm.openFile(INDEX_CATALOG_FILE, fh)!=0){return  -1;}
         if(rbfm.insertRecord(fh, idxTableDescriptor, buffer, idxRid)!= 0) {return -1;}
+        rbfm.closeFile(fh);
 
-        return ix.createFile(idxFileName);
+
+        if(ix.createFile(idxFileName)!=0){return -1; }
+//        FileHandle tab2lefh;
+//        if(rbfm.openFile(tableName, tablefh) != 0) {return 0;}
+        return populateIndexFile(tableName, attributeName, idxFileName);
+
+    }
+
+    RC RelationManager::populateIndexFile(const string &tableName, const string &attributeName,
+                                          const string &idxFileName) {
+        if(!rbfm.isFileExisting(tableName)) {return 0;}
+        RM_ScanIterator rm_scanner;
+        vector<string> attrNames;
+        attrNames.push_back(attributeName);
+        vector<Attribute> descriptor;
+        getAttributes(tableName, descriptor);
+        Attribute attr;
+        for(Attribute a: descriptor) {
+            if(strcmp(a.name.c_str(), attributeName.c_str()) == 0) {
+                attr = a;
+                break;
+            }
+        }
+        scan(tableName, "", NO_OP, "", attrNames, rm_scanner);
+
+        char tempData[PAGE_SIZE], tempData2[PAGE_SIZE];
+        RID tempRID, tempRID2;
+        IXFileHandle idxFH;
+//        int varlen = 0;
+
+        vector<Attribute> tempDescriptor;
+        tempDescriptor.push_back(attr);
+        if(ix.openFile(idxFileName, idxFH) != 0 ) {return -1;}
+        while(rm_scanner.getNextTuple(tempRID, tempData) != RM_EOF) {
+//            rbfm.printRecord(tempDescriptor, tempData, std::cout);
+            if(ix.insertEntry(idxFH, attr, (char*)tempData + 1, tempRID) != 0) {return -2;}
+        }
+//        ix.printBTree(idxFH, attr, std::cout);
+        ix.closeFile(idxFH);
+        rm_scanner.close();
+
+        return 0;
     }
 
     string
@@ -691,7 +718,9 @@ namespace PeterDB {
         memcpy((char*)filterValue + INT_FIELD_LEN, tableName.c_str(), tableNameLen);
     }
 
-    // indexScan returns an iterator to allow the caller to go through qualified entries in index
+    Attribute getAttribute(const string &tableName, const string &attributeName);
+
+// indexScan returns an iterator to allow the caller to go through qualified entries in index
     RC RelationManager::indexScan(const std::string &tableName,
                  const std::string &attributeName,
                  const void *lowKey,
@@ -699,26 +728,40 @@ namespace PeterDB {
                  bool lowKeyInclusive,
                  bool highKeyInclusive,
                  RM_IndexScanIterator &rm_IndexScanIterator) {
-        IXFileHandle ixFileHandle;
-        if(ix.openFile(getIdxFileName(tableName, attributeName), ixFileHandle) != 0){return -1;}
-        IX_ScanIterator ix_ScanIterator;
+        IXFileHandle ixFH;
+        if(ix.openFile(getIdxFileName(tableName, attributeName), ixFH) != 0){return -1;}
+        if(ixFH.fh.getNumberOfPages() <= 0) {
+            populateIndexFile(tableName, attributeName, getIdxFileName(tableName, attributeName));
+        }
+        Attribute attribute = getAttrWithName(tableName, attributeName);
+        ix.scan(ixFH, attribute, lowKey, highKey, lowKeyInclusive, highKeyInclusive, rm_IndexScanIterator);
+//        rm_IndexScanIterator.ix_scanner = &rm_IndexScanIterator
+        return 0;
+    }
+
+    Attribute RelationManager::getAttrWithName(const string &tableName, const string &attributeName) {
+        vector<Attribute> descriptor;
+        this->getAttributes(tableName, descriptor);
         Attribute attribute;
-        attribute.name = attributeName;
-        attribute.type = TypeVarChar;
-        attribute.length = 50;
-        ix.scan(ixFileHandle, attribute, lowKey, highKey, lowKeyInclusive, highKeyInclusive, ix_ScanIterator);
+        for(Attribute a: descriptor) {
+            if(strcmp(a.name.c_str(), attributeName.c_str()) == 0) {
+                attribute = a;
+                break;
+            }
+        }
+        return attribute;
     }
 
     RM_IndexScanIterator::RM_IndexScanIterator() = default;
 
     RM_IndexScanIterator::~RM_IndexScanIterator() = default;
 
-    RC RM_IndexScanIterator::getNextEntry(RID &rid, void *key){
-        return rm_scanner.getNextTuple(rid, key);
-    }
-    RC RM_IndexScanIterator::close(){
-        return rm_scanner.close();
-    }
+//    RC RM_IndexScanIterator::getNextEntry(RID &rid, void *key){
+//        return getNextEntry(rid, key);
+//    }
+//    RC RM_IndexScanIterator::close(){
+//        return close();
+//    }
 
 
     RM_ScanIterator::RM_ScanIterator() = default;
@@ -733,6 +776,7 @@ namespace PeterDB {
     RC RM_ScanIterator::close() {
         return rbfm_scanner.close();
     }
+
 
     // Extra credit work
     RC RelationManager::dropAttribute(const std::string &tableName, const std::string &attributeName) {

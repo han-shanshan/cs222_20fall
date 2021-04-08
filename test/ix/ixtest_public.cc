@@ -707,7 +707,6 @@ namespace PeterDBTesting {
 
                 validateTree(stream, 5, 5, 1, 2);
             }
-
         }
 
         // print BTree, by this time the BTree should have height of 2

@@ -31,15 +31,16 @@ namespace PeterDB {
     };
 
     // RM_IndexScanIterator is an iterator to go through index entries
-    class RM_IndexScanIterator {
+    class RM_IndexScanIterator : public IX_ScanIterator {
     public:
         RM_IndexScanIterator();    // Constructor
         ~RM_IndexScanIterator();    // Destructor
 
         // "key" follows the same format as in IndexManager::insertEntry()
-        RC getNextEntry(RID &rid, void *key);    // Get next matching entry
-        RC close();                              // Terminate index scan
-        RM_ScanIterator rm_scanner;
+//        RC getNextEntry(RID &rid, void *key);    // Get next matching entry
+//        RC close();                              // Terminate index scan
+//        RM_ScanIterator rm_scanner;
+//        IX_ScanIterator ix_scanner;
     };
 
     // Relation Manager
@@ -170,6 +171,10 @@ namespace PeterDB {
         string getIdxFileName(const string &tableName, const string &attributeName) const;
 
         void constructVarcharFilterValue(const string &tableName, void *filterValue) const;
+
+        Attribute getAttrWithName(const string &tableName, const string &attributeName);
+
+        RC populateIndexFile(const string &tableName, const string &attributeName, const string &idxFileName);
     };
 
 } // namespace PeterDB

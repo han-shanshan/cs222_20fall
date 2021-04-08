@@ -324,7 +324,6 @@ namespace PeterDBTesting {
                     prepareLeftVarCharTuple(nullsIndicator, i, inBuffer);
                 else if (tableName == "group")
                     prepareGroupTable(nullsIndicator, i, inBuffer);
-
                 ASSERT_EQ(rm.insertTuple(tableName, inBuffer, rid), success)
                                             << "relationManager.insertTuple() should succeed.";
             }

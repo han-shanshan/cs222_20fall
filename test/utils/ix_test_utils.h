@@ -67,6 +67,22 @@ namespace PeterDBTesting {
             }
         }
 
+        size_t totalRIDCount() {
+            if (children.empty()) {
+                size_t r = 0;
+                for (auto &keyEntry: keys) {
+                    r += keyEntry.RIDs.size();
+                }
+                return r;
+            } else {
+                size_t r = 0;
+                for (auto child : children) {
+                    r += child.totalRIDCount();
+                }
+                return r;
+            }
+        }
+
         size_t childrenCount() const {
             return children.size();
         }
@@ -87,21 +103,7 @@ namespace PeterDBTesting {
             }
         }
 
-        size_t totalRIDCount() {
-            if (children.empty()) {
-                size_t r = 0;
-                for (auto &keyEntry: keys) {
-                    r += keyEntry.RIDs.size();
-                }
-                return r;
-            } else {
-                size_t r = 0;
-                for (auto child : children) {
-                    r += child.totalRIDCount();
-                }
-                return r;
-            }
-        }
+
 
         std::vector<std::string> projectKeys() {
             if (children.empty()) {

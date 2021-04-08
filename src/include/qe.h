@@ -43,7 +43,7 @@ namespace PeterDB {
 
         RC getDataFieldVal(const void *data, vector<Attribute> attrs, int attrPos, AttrType type, void *output);
 
-        RC getTupleLength(const void *data, vector<Attribute> attrs);
+        RC getTupleLength(const void *data, vector<Attribute> attrs) const;
     };
 
     class TableScan : public Iterator {
@@ -96,6 +96,10 @@ namespace PeterDB {
             }
         };
 
+        string getTableName() {
+            return this->tableName;
+        };
+
         ~TableScan() override {
             iter.close();
         };
@@ -131,6 +135,7 @@ namespace PeterDB {
         // Start a new iterator given the new key range
         void setIterator(void *lowKey, void *highKey, bool lowKeyInclusive, bool highKeyInclusive) {
             iter.close();
+//            iter.ixFileHandle
             rm.indexScan(tableName, attrName, lowKey, highKey, lowKeyInclusive, highKeyInclusive, iter);
         };
 
@@ -214,11 +219,61 @@ namespace PeterDB {
         );
 
         ~BNLJoin() override;
+        IndexManager &ix = IndexManager::instance();
+        std::vector<Attribute> leftAttrs;
+        std::vector<Attribute> rightAttrs;
+        int blockBuffer_numPages;
+        unsigned leftAttrPos;
+        unsigned rightAttrPos;
+        int maxTupleNumInSingleBuffer = 0;
+        int maxTupleNumInBlockBuffer = 0;
+        int maxTupleNumPerResultPage = 0;
+        int tupleNumInSingleBuffer = 0;
+        int tupleNumInBlockBuffer = 0;
+        int tupleNum_ResultPage = 0;
+        char rTuple[PAGE_SIZE];
+
+        Iterator *leftIter;
+        TableScan *rightIter;
+        void *blockBuffer = malloc(PAGE_SIZE);
+        char singleBuffer[PAGE_SIZE];
+        char resultBuffer[PAGE_SIZE];
+        bool isNew;
+        bool isRightTableEnd = false;
+        int blockBufferOffset = 0;
+        int singleBufferOffset = 0;
+        int resultBufferOffset = 0;
+        int blockCounter = 0;
+        int singleCounter = 0;
+        int resultCounter = 0;
+        int tupleLen_left = 0;
+        int tupleLen_right = 0;
+        int tupleLen_res = 0;
+        bool isResultPageFull = false;
+        bool isLeftTableEnd = false;
+
+        std::vector<Attribute> attrs;
 
         RC getNextTuple(void *data) override;
 
         // For attribute in std::vector<Attribute>, name it as rel.attr
         RC getAttributes(std::vector<Attribute> &attrs) const override;
+
+//        bool isBufferProcessingFinished() const;
+
+        RC getLeftBlockBuffer();
+
+        RC getRightSingleBuffer(bool isFromBegin);
+
+        void getJoinedTuple(void *lTuple, void *rTuple, int lNullIndicatorLen, int rNullIndicatorLen,
+                            int nullIndicatorBitLen,
+                            void *tuple) const;
+
+        RC getResultPage();
+
+        RC insertJoinedTuplesToRsBuffer(int lNullIndicatorLen, int rNullIndicatorLen, int nullIndicatorBitLen);
+
+        void outputATupleInResultPage(void *data);
     };
 
     class INLJoin : public Iterator {
@@ -237,13 +292,13 @@ namespace PeterDB {
         RC getAttributes(std::vector<Attribute> &attrs) const override;
 
         bool isRightEnd = true;
-        Iterator *lIterator;
-        IndexScan *rIterator;
+        Iterator *leftIter;
+        IndexScan *rightIter;
 
-        void *leftValue;
+        char leftValue[PAGE_SIZE];
 
-        void *lTuple;
-        void *rTuple;
+        char lTuple[PAGE_SIZE];
+        char rTuple[PAGE_SIZE];
 
 //    CompOp op;
 //    AttrType type;
@@ -297,9 +352,9 @@ namespace PeterDB {
                   const Attribute &aggAttr,           // The attribute over which we are computing an aggregate
                   const Attribute &groupAttr,         // The attribute over which we are grouping the tuples
                   AggregateOp op              // Aggregate operation
-        ){};
+        );
 
-        ~Aggregate() override;
+        ~Aggregate();
 
         RC getNextTuple(void *data) override;
 
@@ -312,9 +367,18 @@ namespace PeterDB {
         Iterator *iterator;
         AggregateOp op;
         Attribute aggrAttribute;
+        Attribute groupAttr;
         AttrType type;
         std::vector<Attribute> attributes;
         int attrPos;
+        int groupAttrPos;
+        bool isNew;
+        char aggrVal[PAGE_SIZE];
+        int counter = 0;
+        int sum = 0;
+        bool isGroup = false;
+        std::vector<string> groups;
+//        char aggrTuple[PAGE_SIZE];
 
         RC Sum(void *data);
 
@@ -326,6 +390,9 @@ namespace PeterDB {
         void *setVal(void *minVal, const void *fieldDataVal) const;
 
         RC extremeValue(void *data, AggregateOp op);
+        IndexManager &ix = IndexManager::instance();
+
+        void setAggregationVal(void *data) const;
     };
 } // namespace PeterDB
 

@@ -27,8 +27,8 @@ namespace PeterDB {
     }
 
     RC RecordBasedFileManager::destroyFile(const std::string &fileName) {
-        if (pfm.destroyFile(fileName) != 0) { return -1; } //fail to destroy the file.
-        return 0;
+//        return remove(fileName.c_str());
+        return pfm.destroyFile(fileName); //fail to destroy the file.
     }
 
     RC RecordBasedFileManager::openFile(const std::string &fileName, FileHandle &fileHandle) {
@@ -632,12 +632,18 @@ namespace PeterDB {
                                              const RID &rid, const std::string &attributeName, void *data) {
         char record[PAGE_SIZE];
         readRecord(fileHandle, recordDescriptor, rid, record);
+        readAttrFromRecord(recordDescriptor, attributeName, record, data);
+
+        return 0;
+    }
+
+    void
+    RecordBasedFileManager::readAttrFromRecord(const vector<Attribute> &recordDescriptor, const string &attributeName,
+                                               char *record, void *data) {
         char encodedRecord[PAGE_SIZE];
         encodeRecordData_returnSlotLength(recordDescriptor, record, encodedRecord);
 
         readAttributeFromEncodeData(recordDescriptor, attributeName, encodedRecord, data);
-
-        return 0;
     }
 
     void RecordBasedFileManager::readAttributeFromEncodeData(const vector<Attribute> &recordDescriptor,
@@ -805,6 +811,7 @@ namespace PeterDB {
                     }
                 }
             }
+//            rbfm.printEncodedRecord(selectedRecordDescriptor, encodedFilteredData);
             rbfm.decodeData(selectedRecordDescriptor, data, encodedFilteredData);
         }
         return read_res;

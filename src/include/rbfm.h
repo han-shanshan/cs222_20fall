@@ -244,6 +244,9 @@ bool isIteratorNew;
         void addPageTail(void *pageData, int freeSpc, char *slotTable, int slotTableLen);
 
 
+        void
+        readAttrFromRecord(const vector<Attribute> &recordDescriptor, const string &attributeName, char *record,
+                           void *data);
     };
 
 } // namespace PeterDB
