@@ -570,42 +570,42 @@ namespace PeterDB {
     }
 
     RC Aggregate::getNextTuple(void *data) {
-//        char tempData[PAGE_SIZE];
-//
-//        if(this->iterator->getNextTuple(tempData) != 0) {return -1;}
-//
+        char tempData[PAGE_SIZE];
+
+        if(this->iterator->getNextTuple(tempData) != 0) {return -1;}
+
 //        if(isGroup) {
 //            char groupAttrVal[PAGE_SIZE];
 //            getDataFieldVal(tempData, this->attributes, groupAttrPos, this->groupAttr.type, groupAttrVal);
-//            //todo: put it into vector; set new iterator;
+            //todo: put it into vector; set new iterator;
 //            RelationManager::instance().scan((TableScan)this->iterator.getFileName(), "", NO_OP, NULL, attrNames, iter);
-//
-//
-//
-//        }
-//
-//
-//        while(1) {
-////            RelationManager::instance().printTuple(this->attributes, tempData, std::cout);
-//            if(this->op == MAX || this->op == MIN) {
-//                extremeValue(tempData, this->op);
-//            }else if(this->op == AVG) {
-//                Avg(tempData);
-//            }
-//            if(this->iterator->getNextTuple(tempData) != 0) {break;}
-//        }
-//
-//        if(this->op == MAX || this->op == MIN) {
-//            memcpy(data, this->aggrVal, PAGE_SIZE);
-//        }else{
-//            float avg = (float)sum / counter;
-//            char nullBit[1];
-//            memset(nullBit, 0, 1);
-//            memcpy(data, nullBit, 1);
-//            memcpy((char*)data + 1, &avg, INT_FIELD_LEN);
+
+
+
 //        }
 
-        return -1;
+
+        while(true) {
+//            RelationManager::instance().printTuple(this->attributes, tempData, std::cout);
+            if(this->op == MAX || this->op == MIN) {
+                extremeValue(tempData, this->op);
+            }else if(this->op == AVG) {
+                Avg(tempData);
+            }
+            if(this->iterator->getNextTuple(tempData) != 0) {break;}
+        }
+
+        if(this->op == MAX || this->op == MIN) {
+            memcpy(data, this->aggrVal, PAGE_SIZE);
+        }else{
+            float avg = (float)sum / counter;
+            char nullBit[1];
+            memset(nullBit, 0, 1);
+            memcpy(data, nullBit, 1);
+            memcpy((char*)data + 1, &avg, INT_FIELD_LEN);
+        }
+
+        return 0;
     }
 
     RC Aggregate::Avg(void *data) {
